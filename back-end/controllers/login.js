@@ -24,13 +24,13 @@ if (user.password!==password) {
     }
 }
 const login_google =async (req, res) => {
-    const { GoogleID,family_name,given_name } = req.body;
+    const { GoogleID,family_name,given_name,email} = req.body;
     let name=family_name+" "+given_name;
     console.log(name,GoogleID);
     try{
         const user = await User.findOne({ GoogleID });
         if (!user) {
-            const newUser = new User({ GoogleID,name });
+            const newUser = new User({ GoogleID,name,email });
         await newUser.save();  // Lưu người dùng mới vào cơ sở dữ liệu
 
         res.status(201).json({
@@ -53,6 +53,7 @@ console.log(name, email,password);
     try {
         const user = await User.findOne({ email });
         if (user) {
+            console.log(user)
             return res.status(400).json({ message: 'email đã tồn tại' });}
         const newUser = new User({ name, email, password  });
         await newUser.save();  // Lưu người dùng mới vào cơ sở dữ liệu
