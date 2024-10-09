@@ -19,7 +19,7 @@ const productSchema = new mongoose.Schema({
     location: { type: String },
     status: { type: String, enum: ['in_stock', 'low_stock', 'out_of_stock'], default: 'in_stock' },
     unit: { type: String, default: 'pcs' },
-    purchasePrice: { type: Number },
+    purchasePrice: { type: String },
     notes: { type: String }
 }, { 
     timestamps: true,
