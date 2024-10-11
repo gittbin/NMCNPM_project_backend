@@ -12,7 +12,7 @@ const show=async (req, res) => {
     }
 }
 const edit = async (req, res) => {
-    const { user, product_edit } = req.body;
+    const { user, product_edit,detail } = req.body;
     
     // Kiểm tra quyền chỉnh sửa
     if (!user.rights.includes("edit_product")) {
@@ -38,7 +38,7 @@ const edit = async (req, res) => {
                 employee: user._id,   // ID của nhân viên thực hiện
                 product: product_edit.name,
                 action: 'update',
-                details: `Updated product: ${product_edit.name}`
+                details: detail
             });
             await history.save();
         } catch (err) {
@@ -54,9 +54,10 @@ const edit = async (req, res) => {
 };
 
 const deletes = async (req, res) => {
-    const { user,product_delete } = req.body;
+    const { user,product_delete,detail } = req.body;
     let i=user.rights.includes("delete_product");
     if(!i){return res.status(404).json({ message: "you don't have right to delete goods" });}
+    console.log(detail)
     try {
         const product = await Products.findByIdAndDelete(product_delete._id);
         if (!product) {
@@ -67,7 +68,7 @@ const deletes = async (req, res) => {
             employee: user._id, // ID của nhân viên thực hiện hành động
             product: product.name,
             action: 'delete',
-            details: `delete product: ${product.name}`
+            details: detail
         });
         await history.save();
         res.status(200).json({ message: 'Product deleted successfully' });
@@ -90,7 +91,7 @@ const show_detail = async (req, res) => {
     }
 }
 const create=async (req, res) => {
-    const { user,newPr } = req.body;
+    const { user,newPr,detail } = req.body;
     let i=user.rights.includes("add_product");
     if(!i){return res.status(404).json({ message: "you don't have right to create new goods" });}
     console.log({
@@ -107,7 +108,7 @@ const create=async (req, res) => {
             employee: user._id, 
             product: newPr.name,
             action: 'create',
-            details: `create product: ${newPr.name}`
+            details: detail,
         });
         await history.save();res.status(201).json({message:"Success"});}
         catch(err){res.status(500).json({ message: 'Server error2', err });}
@@ -120,11 +121,10 @@ const create=async (req, res) => {
 const get_history = async (req, res) => {
     const { user } = req.body;
     try {
-        console.log('User:', user);
         const activities = await History.find({ owner: user._id }) // Lấy lịch sử hoạt động của người chủ
             .populate('employee', 'name') // Lấy tên nhân viên
             .sort({ timestamp: -1 }) // Sắp xếp theo thời gian
-            .select('employee product action timestamp') // Chọn các trường cần thiết
+            .select('employee product action timestamp details') // Chọn các trường cần thiết
             .lean();
         console.log('Activities:', activities);
         res.status(200).json(activities);
