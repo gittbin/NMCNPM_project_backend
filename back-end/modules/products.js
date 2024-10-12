@@ -20,7 +20,11 @@ const productSchema = new mongoose.Schema({
     status: { type: String, enum: ['in_stock', 'low_stock', 'out_of_stock'], default: 'in_stock' },
     unit: { type: String, default: 'pcs' },
     purchasePrice: { type: String },
-    notes: { type: String }
+    notes: { type: String },
+    image: {
+        secure_url: String,
+        public_id: String,
+    },
 }, { 
     timestamps: true,
 });

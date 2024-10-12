@@ -1,5 +1,11 @@
 const Products =require('../modules/products')
 const History =require('../modules/history')
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({ 
+    cloud_name: 'ddgrjo6jr', 
+    api_key: '951328984572228', 
+    api_secret: 'IBEHKrE-_AuUbTcxhks0jxLb6lE' 
+  });
 const show=async (req, res) => {
     const { user } = req.body;
     try {
@@ -126,7 +132,6 @@ const get_history = async (req, res) => {
             .sort({ timestamp: -1 }) // Sắp xếp theo thời gian
             .select('employee product action timestamp details') // Chọn các trường cần thiết
             .lean();
-        console.log('Activities:', activities);
         res.status(200).json(activities);
     } catch (error) {
         console.error('Error in get_history:', error); // Log lỗi chi tiết
