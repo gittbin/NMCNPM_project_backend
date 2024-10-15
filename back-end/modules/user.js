@@ -12,7 +12,9 @@ const userSchema = new mongoose.Schema({
         }],
         default: ['add_product', 'edit_product', 'delete_product', 'create_order', 'import_goods', 'create_user'],
     },
-    id_owner: { type: mongoose.Schema.Types.ObjectId }// Thêm trường email_owner
+    id_owner: { type: mongoose.Schema.Types.ObjectId },// Thêm trường email_owner
+    resetCode: String,
+    resetCodeExpire:Date
 }, { timestamps: true });
 
 // Middleware trước khi lưu tài liệu
