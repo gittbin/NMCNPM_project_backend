@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const User =require('../modules/user')
+const User_temporary =require('../modules/Temporary_user')
 const login_raw=async (req, res) => {
     const { email, password } = req.body;
 console.log(email, password)
@@ -50,22 +51,65 @@ const login_google =async (req, res) => {
 
 }
 const sign_up = async (req, res) => {
-    const { name, email, password  } = req.body;
-console.log(name, email,password);
+    const { name, email, password,confirm,code} = req.body;
+console.log(name, email,password,confirm,code);
     try {
-        const user = await User.findOne({ email });
+        let user = await User_temporary.findOne({ email });
+        if(confirm){
+            console.log(user)
+            if (user.code !== code || user.resetCodeExpire < Date.now()) {
+                return res.status(400).json({ message: 'Mã xác nhận không hợp lệ hoặc đã hết hạn!' });
+            }else{
+                const newUser = new User({ name, email, password });
+                newUser.save();
+                console.log(newUser)
+               return  res.status(200).json({ message: 'User created successfully' ,user:newUser});
+            }
+        }
+         user = await User.findOne({ email });
         if (user) {
             console.log(user)
             return res.status(400).json({ message: 'email đã tồn tại' });}
-        const newUser = new User({ name, email, password  });
+            user = await User_temporary.find({ email });
+            if (user.length > 0) {
+                // Xóa tất cả người dùng tạm thời có email này
+                await User_temporary.deleteMany({ email });
+            }
+        const newUser = new User_temporary({ name, email, password });
         await newUser.save();  // Lưu người dùng mới vào cơ sở dữ liệu
-
+        if (!newUser) {
+            return res.status(400).json({ message: 'Có lỗi xảy ra khi tạo người dùng mới!' });
+        }
+                const codes = crypto.randomBytes(3).toString('hex'); // 6 ký tự
+                newUser.code = codes;
+                newUser.resetCodeExpire = Date.now() + 10 * 60 * 1000; // Mã code có hiệu lực trong 10 phút
+                await newUser.save();
+        
+                // Cấu hình gửi mail
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail', // Hoặc SMTP server khác
+                    auth: {
+                        user: 'baolong081104@gmail.com',
+                        pass: 'sugi azhu mxpz snjy',
+                    },
+                });
+        
+                const mailOptions = {
+                    from: 'baolong081104@gmail.com',
+                    to: newUser.email,
+                    subject: 'Mã xác nhận đặt lại mật khẩu',
+                    text: `Mã xác nhận của bạn là: ${codes}`,
+                };
+        
+                // Gửi email
+                await transporter.sendMail(mailOptions);
+        
         res.status(201).json({
             message: 'User created successfully',
-            user: newUser
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error creating user', error});
+        console.error('Error in :', error); // In thông tin lỗi ra console
+        res.status(500).json({ message: 'Có lỗi xảy ra. Vui lòng thử lại !' });
     }
 }
 const forgot_password=async (req, res)=>{
