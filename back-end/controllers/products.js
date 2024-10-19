@@ -18,16 +18,28 @@ const show=async (req, res) => {
     }
 }
 const edit = async (req, res) => {
-    const { user, product_edit,detail } = req.body;
-    
+    const { user, product_edit,detail,check } = req.body;
+    console.log(product_edit)
     // Kiểm tra quyền chỉnh sửa
     if (!user.rights.includes("edit_product")) {
         return res.status(403).json({ message: "You don't have the right to edit goods" });
     }
 
     try {
-        // Tìm và cập nhật sản phẩm
-        const product = await Products.findByIdAndUpdate(
+        let product= await Products.find({ _id: product_edit._id });
+        product=product[0]
+        if (product.image && product.image.public_id&&check) {
+            const publicId = product.image.public_id;
+            // Xóa ảnh trên Cloudinary
+            const result = await cloudinary.uploader.destroy(publicId);
+            if (result.error) {
+              console.error('Error deleting image from Cloudinary:', result.error);
+            //   return res.status(500).json({ message: 'Error deleting image from Cloudinary' });
+            }
+      
+            console.log('Cloudinary delete result:', result);
+          }
+         product = await Products.findByIdAndUpdate(
             product_edit._id,
             product_edit,
             { new: true, runValidators: true }
@@ -77,6 +89,19 @@ const deletes = async (req, res) => {
             details: detail
         });
         await history.save();
+        if (product.image && product.image.public_id) {
+            const publicId = product.image.public_id;
+            console.log(publicId)
+            // Xóa ảnh trên Cloudinary
+            const result = await cloudinary.uploader.destroy(publicId);
+      
+            if (result.error) {
+              console.error('Error deleting image from Cloudinary:', result.error);
+            //   return res.status(500).json({ message: 'Error deleting image from Cloudinary' });
+            }
+      
+            console.log('Cloudinary delete result:', result);
+          }
         res.status(200).json({ message: 'Product deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
