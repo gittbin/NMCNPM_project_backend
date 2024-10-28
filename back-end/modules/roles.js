@@ -6,7 +6,7 @@ const roleSchema = new mongoose.Schema({
     permissions: { type: [String], default: [] },
     createAt: { type: Date, default: Date.now },
     deleteAt: { type: Date, default: null },
-    delete: { boolean: { type: Boolean, default: false } }
+    delete: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model('Role', roleSchema,'Roles');
