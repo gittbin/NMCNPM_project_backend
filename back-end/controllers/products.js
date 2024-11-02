@@ -19,7 +19,6 @@ const show=async (req, res) => {
 }
 const edit = async (req, res) => {
     const { user, product_edit,detail,check } = req.body;
-    console.log(product_edit)
     // Kiểm tra quyền chỉnh sửa
     if (!user.rights.includes("edit_product")) {
         return res.status(403).json({ message: "You don't have the right to edit goods" });
@@ -109,7 +108,6 @@ const deletes = async (req, res) => {
 }
 const show_detail = async (req, res) => {
     try {
-        console.log(req.params.id)
         const product = await Products.findOne({ _id: req.params.id});
         
         if (!product) {
@@ -153,7 +151,7 @@ const get_history = async (req, res) => {
     const { user } = req.body;
     try {
         const activities = await History.find({ owner: user._id }) // Lấy lịch sử hoạt động của người chủ
-            .populate('employee', 'name') // Lấy tên nhân viên
+            .populate('employee', 'name email') // Lấy tên nhân viên
             .sort({ timestamp: -1 }) // Sắp xếp theo thời gian
             .select('employee product action timestamp details') // Chọn các trường cần thiết
             .lean();
