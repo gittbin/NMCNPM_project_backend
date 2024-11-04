@@ -5,12 +5,9 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true },
     password: { type: String, default: null },
     GoogleID: { type: String, default: null },
-    rights: {
-        type: [{
-            type: String,
-            enum: ['add_product', 'edit_product', 'delete_product', 'create_order', 'import_goods', 'create_user'],
-        }],
-        default: ['add_product', 'edit_product', 'delete_product', 'create_order', 'import_goods', 'create_user'],
+    role: {
+        type: String,
+        default: null,
     },
     id_owner: { type: mongoose.Schema.Types.ObjectId },// Thêm trường email_owner
     resetCode: String,
