@@ -1,6 +1,7 @@
 const Products =require('../modules/products')
 const History =require('../modules/history')
 const cloudinary = require('cloudinary').v2;
+const Suppliers=require('../modules/supplier')
 cloudinary.config({ 
     cloud_name: 'ddgrjo6jr', 
     api_key: '951328984572228', 
@@ -10,7 +11,7 @@ const show=async (req, res) => {
     const { user } = req.body;
     try {
         // Tìm user theo email
-        const products = await Products.find({ owner: user._id });
+        const products = await Products.find({ owner: user._id })
         res.json(products);
     } catch (error) {
         console.error('show error', error); 
@@ -108,8 +109,9 @@ const deletes = async (req, res) => {
 }
 const show_detail = async (req, res) => {
     try {
-        const product = await Products.findOne({ _id: req.params.id});
-        
+        const product = await Products.findOne({ _id: req.params.id})
+        .populate("supplier")
+        .lean();
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
@@ -162,12 +164,54 @@ const get_history = async (req, res) => {
     }
 };
 
+const get_supplier=async(req, res)=>{
+    const { user } = req.body;
+    console.log(user)
+    try {
+      // Tìm user theo email
+      const suppliers = await Suppliers.find({ owner: user.id_owner })
+      .populate("creater")
+      .sort({ orderDate: -1 }) // Sắp xếp theo ngày đặt hàng, nếu muốn
+        .lean();
+      if (suppliers) {
+        const send = { suppliers: [...suppliers], message: "success" };
+        res.json(send);
+      } else {
+        res.status(500).json({ message: "Error" });
+      }
+    } catch (error) {
+      console.error("show error", error);
+      res.status(500).json({ message: "Error", error });
+    }
+}
 
+const create_supplier=async(req,res)=>{
+    const { name, email, phone, user } = req.body;
+    try {
+      let check = await Suppliers.findOne({ phone });
+      if (check) {
+        return res.json({ message: "Số điện thoại này đã được đăng ký" });
+      }
+      let new_supplier = new Suppliers({
+        name,
+        email,
+        phone,
+        owner: user.id_owner,
+        creater:user._id
+      });
+      await new_supplier.save();
+      res.json({new_supplier, message: "success" });
+    } catch (err) {
+      return res.status(404).json({ message: "Error" });
+    }
+}
 module.exports = {
     show,
     edit,
     deletes,
     show_detail,
     create,
-    get_history
+    get_history,
+    get_supplier,
+    create_supplier
 }

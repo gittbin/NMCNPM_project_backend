@@ -9,4 +9,6 @@ router.post('/edit', producrs.edit);
 router.post('/deletes', producrs.deletes);
 router.post('/create',producrs.create);
 router.post('/history',producrs.get_history);
+router.post('/get_supplier',producrs.get_supplier)
+router.post('/create_supplier',producrs.create_supplier)
 module.exports = router;

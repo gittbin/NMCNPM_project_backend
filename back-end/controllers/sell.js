@@ -22,7 +22,10 @@ const get_customer = async (req, res) => {
   const { user } = req.body;
   try {
     // Tìm user theo email
-    const customers = await Customer.find({ owner: user.id_owner });
+    const customers = await Customer.find({ owner: user.id_owner })
+    .populate("creater")
+    .sort({ orderDate: -1 }) // Sắp xếp theo ngày đặt hàng, nếu muốn
+      .lean();
     if (customers) {
       const send = { customers: [...customers], message: "success" };
       res.json(send);
@@ -41,20 +44,21 @@ const create_customer = async (req, res) => {
     if (check) {
       return res.json({ message: "Số điện thoại này đã được đăng ký" });
     }
-    const new_customer = new Customer({
+    let new_customer = new Customer({
       name,
       email,
       phone,
       owner: user.id_owner,
+      creater:user._id
     });
     await new_customer.save();
-    res.json({ message: "success" });
+    res.json({new_customer, message: "success" });
   } catch (err) {
     return res.status(404).json({ message: "Error" });
   }
 };
 const history = async (req, res) => {
-  const { owner, customerId, totalAmount, items, paymentMethod, notes,discount,vat } =
+  const { owner, customerId, totalAmount, items, paymentMethod, notes,discount,vat,creater } =
     req.body;
 console.log(discount,vat)
   try {
@@ -69,6 +73,7 @@ console.log(discount,vat)
 
       newBill = new Bills({
         owner,
+        creater,
         customerId: check._id,
         totalAmount,
         items,
@@ -98,7 +103,7 @@ console.log(discount,vat)
       );
     } else {
       newBill = new Bills({ owner, totalAmount, items, paymentMethod, notes ,discount,
-        vat});
+        vat,creater});
     }
 
     await newBill.save();
@@ -125,6 +130,7 @@ const get_history = async (req, res) => {
     console.log(user);
     const activities = await Bills.find({ owner: user._id }) // Lấy lịch sử hoạt động của người chủ
       .populate("owner") // Lấy tất cả thông tin của chủ sở hữu
+      .populate("creater") // Lấy tất cả thông tin của chủ sở hữu
       .populate("customerId") // Lấy tất cả thông tin của khách hàng nếu cần
       .populate({
         path: "items.productID", // Truy cập đến productID trong mảng items
@@ -139,6 +145,7 @@ const get_history = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 module.exports = {
   findcode,
   create_customer,

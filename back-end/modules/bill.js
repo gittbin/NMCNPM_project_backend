@@ -5,6 +5,11 @@ const Bill_Schema = new mongoose.Schema({
         ref: 'Users', 
         required: true 
     },
+    creater: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Users', 
+        required: true 
+    },
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customers'},
     orderDate: { type: Date, default: Date.now },
     totalAmount: { type: String, required: true },
