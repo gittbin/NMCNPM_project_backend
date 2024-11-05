@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const User =require('../modules/user')
 const User_temporary =require('../modules/Temporary_user')
+const jwt = require("jsonwebtoken");
 const login_raw=async (req, res) => {
     const { email, password } = req.body;
 console.log(email, password)
@@ -14,7 +15,9 @@ console.log(email, password)
 if (user.password!==password) {
             res.status(400).json({ message: 'wrong password' });
         }else{
-            res.status(200).json({ message: 'Login successful', user });
+            const token = jwt.sign({ userId: user._id, role: user.role }, 
+                                    process.env.JWT_SECRET, { expiresIn: "1h" });
+            res.status(200).json({ message: 'Login successful',  user, token  });
         }
         }
         
@@ -41,7 +44,9 @@ const login_google =async (req, res) => {
             user: newUser
         });
         }else{
-        res.status(200).json({ message: 'Login successful', user });            
+            const token = jwt.sign({ userId: user._id, role: user.role }, 
+                process.env.JWT_SECRET, { expiresIn: "1h" });
+            res.status(200).json({ message: 'Login successful',  user, token  });            
         }
 
     }catch (error) {

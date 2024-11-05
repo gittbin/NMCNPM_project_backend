@@ -6,6 +6,9 @@ const path = require('path');
 const app = express()
 const mongodb=require('./modules/config/db')
 const bodyParser = require('body-parser');
+
+require('dotenv').config();
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('combined'))
 app.use(express.json());

@@ -94,7 +94,6 @@ const showUser = async (req, res) => {
         const users = await User.find({
             id_owner: userId
         });
-        console.log("On");
 
 
         // Nếu không tìm thấy người dùng nào
