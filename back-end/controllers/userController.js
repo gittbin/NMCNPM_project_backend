@@ -38,6 +38,7 @@ const createUser = async (req, res) => {
             id_owner,
             resetCode,
             resetCodeExpire,
+            isVerified: false,
         });
         console.log("Tạo thành công người dùng mới");
 
@@ -48,16 +49,16 @@ const createUser = async (req, res) => {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: 'yuvaleryc@gmail.com',
-                pass: 'YOUR_APP_PASSWORD', // Đổi mật khẩu tài khoản Google thành App Password nếu cần
+                user: 'uyle3614@gmail.com',
+                pass: process.env.GMAIL_PASSWORD,
             },
         });
 
         // Tạo nội dung email
         const mailOptions = {
-            from: 'yuvaleryc@gmail.com',
+            from: 'uyle3614@gmail.com',
             to: newUser.email,
-            subject: 'Mã xác nhận đăng ký tài khoản',
+            subject: 'Uy đẹp trai đã gửi cho bạn một lời mời làm thuyền viên: Mã xác nhận đăng ký tài khoản',
             text: `Mã xác nhận của bạn là: ${resetCode}`,
         };
 
@@ -80,6 +81,32 @@ const createUser = async (req, res) => {
         });
     }
 };
+
+const verifyOTP = async (req, res) => {
+    const { email, otp } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
+        }
+
+        if (user.resetCode === otp && user.resetCodeExpire > Date.now()) {
+            user.isVerified = true; // Đánh dấu tài khoản là đã xác thực
+            user.resetCode = null;
+            user.resetCodeExpire = null;
+            await user.save();
+
+            return res.status(200).json({ message: 'Xác thực OTP thành công!' });
+        } else {
+            return res.status(400).json({ message: 'OTP không hợp lệ hoặc đã hết hạn!' });
+        }
+    } catch (error) {
+        console.error('Lỗi xác thực OTP:', error);
+        res.status(500).json({ message: 'Có lỗi xảy ra khi xác thực OTP. Vui lòng thử lại!' });
+    }
+};
+
 
 const showUser = async (req, res) => {
     const userId = req.query.userId;
@@ -176,5 +203,6 @@ module.exports = {
     createUser,
     showUser,
     deleteUser,
-    editUser
+    editUser,
+    verifyOTP
 };

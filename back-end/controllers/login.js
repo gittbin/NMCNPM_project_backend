@@ -44,6 +44,9 @@ const login_google =async (req, res) => {
             user: newUser
         });
         }else{
+            if (!user.isVerified) {
+                return res.status(403).json({ message: 'Tài khoản chưa xác thực. Vui lòng kiểm tra email để xác thực tài khoản.' });
+            }
             const token = jwt.sign({ userId: user._id, role: user.role }, 
                 process.env.JWT_SECRET, { expiresIn: "1h" });
             res.status(200).json({ message: 'Login successful',  user, token  });            

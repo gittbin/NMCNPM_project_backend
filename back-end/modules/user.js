@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema({
     },
     id_owner: { type: mongoose.Schema.Types.ObjectId },// Thêm trường email_owner
     resetCode: String,
-    resetCodeExpire:Date
+    resetCodeExpire:Date,
+    isVerified: { type: Boolean, default: false },
 }, { timestamps: true });
 
 // Middleware trước khi lưu tài liệu
