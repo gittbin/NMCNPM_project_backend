@@ -25,7 +25,7 @@ if (user.password!==password) {
         // Nếu thành công, trả về thông báo thành công
         
     } catch (error) {
-        console.error('Login error:', error); // Thêm thông tin lỗi vào console
+        console.error('Login error:',error); // Thêm thông tin lỗi vào console
         res.status(500).json({ message: 'Error logging in', error });
     }
 }
