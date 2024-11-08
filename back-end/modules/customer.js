@@ -18,7 +18,9 @@ const customerSchema = new mongoose.Schema({
     money:{
         type:String,
         default:"0.000"
-    }
+    },
+    lastPurchaseDate: { type: Date ,default:null},
+    firstPurchaseDate: { type: Date ,default:null},
 }, { timestamps: true });
 
 const Customer = mongoose.model('Customers', customerSchema,'Customers');

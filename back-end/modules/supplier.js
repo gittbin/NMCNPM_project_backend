@@ -4,7 +4,6 @@ const SuppliersSchema = new mongoose.Schema({
     name: { type: String},
     phone: { type: String, required: true },
     email: { type: String},
-    rate: { type: Number,default:0},
     owner: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Users', 
