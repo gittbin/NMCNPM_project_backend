@@ -3,8 +3,6 @@ const temperary_public=require('./temperary_public')
 const products=require('./products')
 const roles=require('./roles.route')
 const accounts = require('./accounts.route') 
-
-const products=require('./products')
 const sell=require('./sell.js')
 const home=require('./home.js')
 function routes(app){
