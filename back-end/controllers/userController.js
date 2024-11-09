@@ -41,6 +41,7 @@ const createUser = async (req, res) => {
             isVerified: false,
         });
         console.log("Tạo thành công người dùng mới");
+        console.log("Tạo thành công người dùng mới ok");
 
         // Lưu người dùng vào cơ sở dữ liệu
         await newUser.save();
