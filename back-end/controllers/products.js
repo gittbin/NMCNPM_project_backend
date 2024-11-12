@@ -3,6 +3,7 @@ const History =require('../modules/history')
 const cloudinary = require('cloudinary').v2;
 const Suppliers=require('../modules/supplier')
 const supplierCHistory =require('../modules/history_change_supplier')
+const mongoose = require("mongoose");
 cloudinary.config({ 
     cloud_name: 'ddgrjo6jr', 
     api_key: '951328984572228', 
@@ -337,6 +338,117 @@ const delete_supplier=async(req,res)=>{
         res.status(500).json({ message: error.message });
     }
 }
+const getProductsBySupplier = async (req, res) => {
+    const { productId,ownerId } = req.query;
+    console.log(productId,ownerId)
+    const objectIdSupplierId = new mongoose.Types.ObjectId(productId);
+    // Kiểm tra xem productId có tồn tại trong query params không
+    if (!productId) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
+    try {
+      const products = await Products.aggregate([
+        {
+          $lookup: {
+            from: "Suppliers",
+            localField: "supplier",
+            foreignField: "_id",
+            as: "supplierDetails",
+          },
+        },
+        {
+          $unwind: {
+            path: "$supplierDetails",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $match: {
+            "supplierDetails._id": objectIdSupplierId,
+            "supplierDetails.owner":new mongoose.Types.ObjectId(ownerId),
+          },
+        },
+        {
+          $project: {
+            name: 1,
+            description: 1,
+            image: 1,
+            purchasePrice: 1,
+            "supplierDetails._id": 1,
+            "supplierDetails.name": 1,
+            "supplierDetails.email": 1,
+          },
+        },
+      ]);
+      if (products.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No products found for this supplier" });
+      }
+      // Trả về danh sách sản phẩm nếu tìm thấy
+      res.status(200).json(products);
+    } catch (error) {
+      console.error("Error fetching products by supplier:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  };
+  const getProductsByProductName = async (req, res) => {
+    const { query,ownerId } = req.query;
+    const objectProductId = query;
+    console.log(query,ownerId)
+    // Kiểm tra xem productId có tồn tại trong query params không
+    if (!objectProductId) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
+    try {
+      const products = await Products.aggregate([
+        {
+          $lookup: {
+            from: "Suppliers",
+            localField: "supplier",
+            foreignField: "_id",
+            as: "supplierDetails",
+          },
+        },
+        {
+          $unwind: {
+            path: "$supplierDetails",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $match: {
+            name: {
+              $regex: objectProductId, 
+              $options: "i", 
+            },
+            "supplierDetails.owner": new mongoose.Types.ObjectId(ownerId) 
+          },
+        },
+        {
+          $project: {
+            name: 1,
+            description: 1,
+            image: 1,
+            purchasePrice: 1,
+            "supplierDetails._id": 1,
+            "supplierDetails.name": 1,
+            "supplierDetails.email": 1,
+          },
+        },
+      ]);
+      if (products.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No products found for this supplier" });
+      }
+      // Trả về danh sách sản phẩm nếu tìm thấy
+      res.status(200).json(products);
+    } catch (error) {
+      console.error("Error fetching products by supplier:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  };
 module.exports = {
     show,
     edit,
@@ -348,5 +460,7 @@ module.exports = {
     create_supplier,
     edit_supplier,
     get_history_supplier,
-    delete_supplier
+    delete_supplier,
+    getProductsBySupplier,
+    getProductsByProductName,
 }

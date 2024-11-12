@@ -5,6 +5,7 @@ const roles=require('./roles.route')
 const accounts = require('./accounts.route') 
 const sell=require('./sell.js')
 const home=require('./home.js')
+const Import = require('./import.js')
 function routes(app){
     app.use('/',temperary_public)    
     app.use('/login',login);
@@ -14,6 +15,6 @@ function routes(app){
     app.use('/products',products)
     app.use('/sell',sell)
     app.use('/home',home)
-    
+    app.use('/import',Import)
 }
 module.exports = routes
