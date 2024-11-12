@@ -95,11 +95,11 @@ const saveOrderHistory = async (req, res) => {
         return new LoggingOrder({
           orderId: savedOrder._id,
           orderDetailId: savedOrderDetail._id, // Sử dụng _id của từng order detail đã lưu
-          status: "create", // Lấy status tương ứng
+          status: 'create', // Lấy status tương ứng
           userId: req.body.user.id,
           userName: req.body.user.name,
-          details: "create a new item",
-          ownerId: new mongoose.Types.ObjectId(req.body.user.ownerId),
+          details:'create a new item',
+          ownerId:new mongoose.Types.ObjectId(req.body.user.ownerId)
         });
       });
 
@@ -114,7 +114,7 @@ const saveOrderHistory = async (req, res) => {
           return { id: item.productId, quantity: item.quantity };
       })
       .filter((item) => item !== undefined);
-
+      
     for (const item of productDeliveried) {
       const product = await Products.findOne({ _id: item.id });
       if (product) {
@@ -139,94 +139,90 @@ const saveOrderHistory = async (req, res) => {
 
 const getOrder = async (req, res) => {
   try {
-    const { search, ownerId } = req.query;
-    console.log("khoe", ownerId);
-    let matchConditions = {};
-    if (search) {
-      if (mongoose.Types.ObjectId.isValid(search)) {
-        matchConditions._id = new mongoose.Types.ObjectId(search);
-      } else if (isNaN(Date.parse(search))) {
-        matchConditions["supplier.name"] = { $regex: search, $options: "i" };
-      } else {
-        const parsedDate = new Date(search);
-        if (isNaN(parsedDate)) {
-          return res.status(400).json({ error: "Invalid date format" });
-        }
-        // Tìm tất cả các đơn hàng trong ngày cụ thể (từ 00:00 đến 23:59:59)
-        matchConditions.createdAt = {
-          $gte: parsedDate,
-          $lt: new Date(parsedDate.getTime() + 24 * 60 * 60 * 1000),
-        };
-      }
+    const { search,ownerId } = req.query; 
+    console.log(ownerId) 
+  let matchConditions = {};
+  if (search) {
+    if (mongoose.Types.ObjectId.isValid(search)) {
+      matchConditions._id = new mongoose.Types.ObjectId(search); 
     }
-    console.log(matchConditions);
+    else if (isNaN(Date.parse(search))) {
+      matchConditions['supplier.name'] = { $regex: search, $options: 'i' };
+    }
+    else {
+      const parsedDate = new Date(search);
+      if (isNaN(parsedDate)) {
+        return res.status(400).json({ error: 'Invalid date format' });
+      }
+      // Tìm tất cả các đơn hàng trong ngày cụ thể (từ 00:00 đến 23:59:59)
+      matchConditions.createdAt = { $gte: parsedDate, $lt: new Date(parsedDate.getTime() + 24 * 60 * 60 * 1000) };
+    }
+  }
+  console.log(matchConditions)
     const result = await OrderHistory.aggregate([
+     
       {
         $lookup: {
-          from: "Suppliers",
-          localField: "supplierId",
-          foreignField: "_id",
-          as: "supplier",
-        },
+          from: 'Suppliers',
+          localField: 'supplierId', 
+          foreignField: '_id', 
+          as: 'supplier'
+        }
       },
       {
         $match: {
-          ...matchConditions,
-          generalStatus: "pending",
-          ownerId: new mongoose.Types.ObjectId(ownerId),
-        },
-      },
+          ...matchConditions ,
+          generalStatus:'pending',
+          ownerId:new mongoose.Types.ObjectId( ownerId),
+        }
+     },
       {
         $unwind: {
-          path: "$supplier",
-          preserveNullAndEmptyArrays: true,
-        },
+          path: '$supplier',
+          preserveNullAndEmptyArrays: true 
+        }
       },
       {
         $project: {
-          supplierId: 1,
-          generalStatus: 1,
-          amount: 1,
-          updatedAt: 1,
-          nameSupplier: "$supplier.name",
-          emailSupplier: "$supplier.email",
-          supplierId: "$supplier._id",
-        },
-      },
+          supplierId:1,
+          generalStatus:1,
+          amount:1,
+          updatedAt:1,
+          nameSupplier:'$supplier.name',
+          emailSupplier:'$supplier.email',
+          supplierId: '$supplier._id', 
+        }
+      }
     ]);
 
     if (result.length === 0) {
-      return res.status(404).json({
-        message: "Order not found or no supplier associated with this order.",
-      });
+      return res.status(404).json({ message: 'Order not found or no supplier associated with this order.' });
     }
 
     // Trả về kết quả
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Error in aggregate query:", error);
-    return res.status(500).json({ message: "Server error" });
+    console.error('Error in aggregate query:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
-};
+}
 const updateOrderHistory = async (req, res) => {
   const newOrder = req.body;
-  console.log(newOrder);
-  console.log("em");
+  console.log(newOrder)
+  console.log("em")
   try {
-    const orderH = await OrderHistory.findOne({
-      _id: new mongoose.Types.ObjectId(newOrder.id),
-    });
+    const orderH = await OrderHistory.findOne({ _id: new mongoose.Types.ObjectId(newOrder.id) });
     if (!orderH) {
-      return res.status(404).json({ message: "Order history not found" });
+      return res.status(404).json({ message: 'Order history not found' });
     }
 
     if (newOrder.status !== orderH.generalStatus) {
       const listOrderChange = await OrderDetailHistory.find({
         orderId: new mongoose.Types.ObjectId(newOrder.id),
-        status: "pending",
+        status: 'pending',
       });
 
-      if (newOrder.status === "deliveried") {
+      if (newOrder.status === 'deliveried') {
         const promises = listOrderChange.map(async (orderChange) => {
           try {
             await Products.updateOne(
@@ -234,50 +230,46 @@ const updateOrderHistory = async (req, res) => {
               { $inc: { stock_in_Warehouse: orderChange.quantity } }
             );
 
-            orderChange.status = "deliveried";
+            orderChange.status = 'deliveried';
             orderChange.updatedAt = newOrder.date;
             await orderChange.save();
 
             const newLogging = new LoggingOrder({
               orderId: newOrder.id,
               orderDetailId: orderChange._id,
-              status: "update",
+              status: 'update',
               userId: newOrder.userid,
               userName: newOrder.userName,
               details: newOrder.notes,
-              ownerId: newOrder.ownerId,
+              ownerId:newOrder.ownerId,
             });
-            console.log(newLogging);
+            console.log(newLogging)
             await newLogging.save();
           } catch (error) {
-            console.error(
-              `Error updating order detail ${orderChange._id}:`,
-              error
-            );
+            console.error(`Error updating order detail ${orderChange._id}:`, error);
           }
         });
         await Promise.all(promises);
-      } else if (newOrder.status === "Canceled") {
+      }
+
+      else if (newOrder.status === 'Canceled') {
         const promises = listOrderChange.map(async (orderChange) => {
           try {
-            orderChange.status = "Canceled";
+            orderChange.status = 'Canceled';
             orderChange.updatedAt = newOrder.date;
             await orderChange.save();
 
             const newLogging = new LoggingOrder({
               orderId: newOrder.id,
               orderDetailId: orderChange._id,
-              status: "delete",
+              status: 'delete',
               userId: newOrder.userid,
               userName: newOrder.userName,
               details: newOrder.notes,
             });
             await newLogging.save();
           } catch (error) {
-            console.error(
-              `Error canceling order detail ${orderChange._id}:`,
-              error
-            );
+            console.error(`Error canceling order detail ${orderChange._id}:`, error);
           }
         });
         await Promise.all(promises);
@@ -290,162 +282,54 @@ const updateOrderHistory = async (req, res) => {
 
     await orderH.save();
 
-    res.status(200).json({ message: "Order updated successfully" });
+    res.status(200).json({ message: 'Order updated successfully' });
   } catch (error) {
-    console.error("Error updating OrderHistory:", error);
-    res
-      .status(500)
-      .json({ message: "Error updating order", error: error.message });
+    console.error('Error updating OrderHistory:', error);
+    res.status(500).json({ message: 'Error updating order', error: error.message });
   }
 };
-const getSupplierByOrderId = async (req, res) => {
-  const { orderId, ownerId } = req.query;
-  console.log(ownerId);
+const getSupplierByOrderId = async(req,res)=> {
+  const {orderId,ownerId} = req.query;
+  console.log(ownerId)
   if (!orderId) {
-    return res.status(400).json({ error: "Order ID is required" });
+    return res.status(400).json({ error: 'Order ID is required' });
   }
 
   try {
     const orders = await OrderHistory.aggregate([
       {
-        $match: {
-          _id: new mongoose.Types.ObjectId(orderId),
-        },
+        $match:{
+          _id:new mongoose.Types.ObjectId(orderId)
+        }
       },
       {
         $lookup: {
-          from: "Suppliers",
-          localField: "supplierId", // Trường trong orderHistory chứa _id nhà cung cấp
-          foreignField: "_id", // Trường _id trong collection supplier
-          as: "supplierDetails", // Kết quả nối sẽ được lưu trong trường này
-        },
+          from: 'Suppliers', 
+          localField: 'supplierId', // Trường trong orderHistory chứa _id nhà cung cấp
+          foreignField: '_id', // Trường _id trong collection supplier
+          as: 'supplierDetails' // Kết quả nối sẽ được lưu trong trường này
+        }
       },
-
+ 
       {
-        $unwind: "$supplierDetails", // "Giải nở" (unwind) để chuyển dữ liệu từ mảng thành đối tượng
+        $unwind: '$supplierDetails' // "Giải nở" (unwind) để chuyển dữ liệu từ mảng thành đối tượng
       },
       {
         $project: {
-          supplierName: "$supplierDetails.name", // Lấy tên nhà cung cấp
-          supplierEmail: "$supplierDetails.email", // Lấy email nhà cung cấp
-        },
-      },
+          supplierName: '$supplierDetails.name', // Lấy tên nhà cung cấp
+          supplierEmail: '$supplierDetails.email' // Lấy email nhà cung cấp
+        }
+      }
     ]);
     if (orders.length === 0) {
-      return res.status(404).json({ error: "Order not found" });
+      return res.status(404).json({ error: 'Order not found' });
     }
-    res.json(orders[0]);
+    res.json(orders[0])
   } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-};
-const getProductTop100 = async (req, res) => {
-  const { ownerId } = req.query;
-
-  const firstDayOfLastMonth = new Date();
-  firstDayOfLastMonth.setMonth(firstDayOfLastMonth.getMonth() - 1);
-  firstDayOfLastMonth.setDate(1);
-  firstDayOfLastMonth.setHours(0, 0, 0, 0);
-
-  const lastDayOfLastMonth = new Date(firstDayOfLastMonth);
-  lastDayOfLastMonth.setMonth(lastDayOfLastMonth.getMonth() + 1);
-  lastDayOfLastMonth.setDate(0);
-  lastDayOfLastMonth.setHours(23, 59, 59, 999);
-
-  if (!ownerId) {
-    return res.status(400).json({ error: "Owner ID is required" });
-  }
-
-  try {
-    const products = await OrderDetailHistory.aggregate([
-      {
-        $match: {
-          ownerId: new mongoose.Types.ObjectId(ownerId),
-          createdAt: {
-            $gte: firstDayOfLastMonth,
-            $lt: lastDayOfLastMonth,
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "Products",
-          localField: "productId",
-          foreignField: "_id",
-          as: "product",
-        },
-      },
-      {
-        $unwind: {
-          path: "$product",
-          preserveNullAndEmptyArrays: false,
-        },
-      },
-      {
-        $lookup: {
-          from: "Suppliers",
-          localField: "product.supplier",
-          foreignField: "_id",
-          as: "supplier",
-        },
-      },
-      {
-        $unwind: {
-          path: "$supplier",
-          preserveNullAndEmptyArrays: false,
-        },
-      },
-      {
-        $addFields: {
-          numericQuantity: { $toDouble: "$quantity" }, // Chuyển quantity từ string sang number
-        },
-      },
-      {
-        $group: {
-          _id: "$productId",
-          totalQuantity: { $sum: "$numericQuantity" },
-          name: { $first: "$product.name" },
-          description: { $first: "$product.description" },
-          image: { $first: "$product.image" },
-          purchasePrice: { $first: "$product.purchasePrice" },
-          supplierId: { $first: "$supplier._id" },
-          supplierName: { $first: "$supplier.name" },
-          supplierEmail: { $first: "$supplier.email" },
-        },
-      },
-      {
-        $project: {
-          // productId: "$_id",
-          // _id: "$",
-          // totalQuantity: 1,
-          name: 1,
-          description: 1,
-          image: 1,
-          purchasePrice: 1,
-          supplierDetails:{
-            _id:'$supplierId',
-            name:'$supplierName',
-            email:'$supplierEmail',
-          },
-        },
-      },
-      {
-        $sort: {
-          totalQuantity: -1,
-        },
-      },
-      {
-        $limit: 100,
-      },
-    ]);
-
-    return res.status(200).json(products);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "An error occurred" });
-  }
-};
+}
 
 
 module.exports = {
@@ -453,5 +337,4 @@ module.exports = {
   getOrder,
   updateOrderHistory,
   getSupplierByOrderId,
-  getProductTop100,
 };
