@@ -208,9 +208,66 @@ const new_customer = async (req, res) => {
       res.status(500).json({ error: 'An error occurred while calculating income.' });
   }
 };
+const generateCustomerReport = async (req,res) => {
+  const { user } = req.body;
+
+  const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  const report = [];
+
+ try{ for (let i = 0; i < 11; i++) {
+      const month = months[i];
+      
+      // Tính ngày bắt đầu và kết thúc của tháng hiện tại
+      const startDate = new Date(`2024-${i + 1}-01`);
+      const endDate = new Date(`2024-${i + 2}-01`);
+
+      // Tìm khách hàng có giao dịch trong tháng i
+      const customers = await Customer.find({
+        owner: user._id, 
+          $or: [
+              { "firstPurchaseDate": { $gte: startDate, $lt: endDate } },
+              { "lastPurchaseDate": { $gte: startDate, $lt: endDate } }
+          ]
+      })
+      // Phân loại khách hàng
+      const loyalCustomers = customers.filter(customer => 
+          customer.rate >= 2 && parseFloat(customer.money.replace(/\./g,'')) >= 50000
+      ).length;
+
+      const newCustomers = customers.filter(customer => 
+          customer.rate === 1 && new Date(customer.firstPurchaseDate).getMonth() === i
+      ).length;
+
+      const returningCustomers = customers.filter(customer => 
+          customer.rate > 1 && 
+          new Date(customer.lastPurchaseDate).getMonth() === i &&
+          new Date(customer.firstPurchaseDate).getMonth() < i
+      ).length;
+
+      // Thêm dữ liệu vào báo cáo
+      report.push({
+          name: month,
+          "Khách hàng trung thành": loyalCustomers,
+          "Khách hàng mới": newCustomers,
+          "Khách hàng quay lại": returningCustomers
+      });
+      
+  }
+res.json(report)
+}catch(e){
+    console.log(e.message);
+  }
+
+};
+
+
 
 module.exports = {
   total_revenue,
   today_income,
-  new_customer
+  new_customer,
+  generateCustomerReport
 };

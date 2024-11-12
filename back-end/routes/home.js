@@ -6,4 +6,5 @@ const router = express.Router();
 router.post('/total_revenue', home.total_revenue);
 router.post('/today_income', home.today_income);
 router.post('/new_customer', home.new_customer);
+router.post('/generateCustomerReport', home.generateCustomerReport);
 module.exports = router;
