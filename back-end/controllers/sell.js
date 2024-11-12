@@ -61,13 +61,12 @@ const create_customer = async (req, res) => {
 const history = async (req, res) => {
   const { owner, customerId, totalAmount, items, paymentMethod, notes,discount,vat,creater } =
     req.body;
-console.log(discount,vat)
   try {
     let newBill;
     if (customerId != "") {
       let check = await Customer.findOne({ phone: customerId });
       if (!check) {
-        const new_customer = new Customer({ phone: customerId, owner,firstPurchaseDate:Date.now(),lastPurchaseDate:Date.now() });
+        const new_customer = new Customer({ phone: customerId, owner,firstPurchaseDate:Date.now(),lastPurchaseDate:Date.now(),creater:creater });
         await new_customer.save();
         check = await Customer.findOne({ phone: customerId });
       }
@@ -207,9 +206,11 @@ const edit_customer=async (req,res)=>{
 
               // Loại bỏ trường createdAt khỏi danh sách thay đổi
               const filteredFields = updatedFields.filter(field => {
-                  if(field=='creater'||field=='owner') {
+                  if(field=='creater'||field=='owner'||field=="updatedAt") {
                       return false;}
-                  
+                  if(field=="rate"){
+                    customer_edit[field] =parseInt(customer_edit[field])  
+                  }
                   return oldProduct[field] !== customer_edit[field]
               });
                   
@@ -219,7 +220,6 @@ const edit_customer=async (req,res)=>{
                   const changes = filteredFields.map(field => {
                       const oldValue = oldProduct[field];
                       const newValue = customer_edit[field];
-                      
                       // Ghi lại thay đổi theo format "field changed from oldValue to newValue"
                       return `${field} changed from '${oldValue}' to '${newValue}'`;
                   });
