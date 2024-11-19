@@ -16,6 +16,7 @@ router.post('/orderHistory/save', orderHistory.saveOrderHistory);
 router.get('/orderHistory/getOrder', orderHistory.getOrder);
 router.put('/orderHistory/updateOrderhistory',orderHistory.updateOrderHistory);
 router.get('/orderHistory/supplierName',orderHistory.getSupplierByOrderId);
+router.get('/orderHistory/lastProductTop100',orderHistory.getProductTop100);
 
 router.get('/products/exhibitPro',producrs.getProductsBySupplier)
 router.get('/products/exhibitProN',producrs.getProductsByProductName)
