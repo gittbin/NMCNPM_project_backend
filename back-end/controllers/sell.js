@@ -132,6 +132,7 @@ const history = async (req, res) => {
       if (product) {
         // Trừ số lượng sản phẩm dựa vào số lượng của `item`
         product.stock_in_shelf -= item.quantity;
+        product.rate=product.rate+1;
         if (product.stock_in_shelf < 0) {
           product.stock_in_shelf = 0; // Đảm bảo số lượng không âm
         }

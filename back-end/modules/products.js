@@ -27,6 +27,14 @@ const productSchema = new mongoose.Schema({
         secure_url: String,
         public_id: String,
     },
+    rate:{
+        type:Number,
+         default: 0 
+    },
+    discount:{
+        type:Number,
+         default: 0 
+    }
 }, { 
     timestamps: true,
 });

@@ -210,7 +210,6 @@ const new_customer = async (req, res) => {
 };
 const generateCustomerReport = async (req,res) => {
   const { user } = req.body;
-
   const months = [
       "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
@@ -262,12 +261,74 @@ res.json(report)
   }
 
 };
+const generatedailySale=async (req,res)=>{
+const {user}=req.body
+const today = new Date();
+const date = [];
+const report = [];
+let money=0;
+for(i=7;i>=0;i--){
+  money=0;
+const x = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i));
+const y = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i + 1));
+date.push(`ngày ${x.getDate()}-Tháng ${x.getMonth() + 1}`)
+const money_in_date = await Bills.find({
+  owner: user._id, 
+ orderDate: { $gte: x, $lt: y } ,
+})
+money_in_date.forEach((bill)=>{money=money+parseInt(bill.totalAmount.replace(/\./g, ''))})
+report.push(money)
+}
+res.json({date,
+          report
+})
 
+}
+const generatedailyCustomer=async (req,res)=>{
+  const {user}=req.body
+  const today = new Date();
+  const labels = [];
+  const data = [];
+  
+  for (let i = 7; i >= 0; i--) {
+    const x = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i));
+    const y = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i + 1));
+  
+    labels.push(`ngày ${x.getUTCDate()}-Tháng ${x.getUTCMonth() + 1}`);
+    const customer_in_date = await Customer.find({
+      owner: user._id,
+      firstPurchaseDate: { $gte: x, $lt: y },
+    });
+  
+    data.push(customer_in_date.length);
+  }
+  
+  res.json({
+    labels,
+    data,
+  });
+  
+  
+  }
+  function getTopRatedProducts(products, topN = 3) {
+    return products
+        .sort((a, b) => b.rate - a.rate) 
+}
+  const generate_top_product=async(req,res)=>{
+    const {user}=req.body
+    const products = await Products.find({
+      owner: user._id, 
+    })
+    res.json( getTopRatedProducts(products))
+  }
 
 
 module.exports = {
   total_revenue,
   today_income,
   new_customer,
-  generateCustomerReport
+  generateCustomerReport,
+  generatedailySale,
+  generatedailyCustomer,
+  generate_top_product,
 };
