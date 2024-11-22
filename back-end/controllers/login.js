@@ -25,7 +25,7 @@ if (user.password!==password) {
         // Nếu thành công, trả về thông báo thành công
         
     } catch (error) {
-        console.error('Login error:', error); // Thêm thông tin lỗi vào console
+        console.error('Login error:',error); // Thêm thông tin lỗi vào console
         res.status(500).json({ message: 'Error logging in', error });
     }
 }
@@ -36,6 +36,15 @@ const login_google =async (req, res) => {
     try{
         const user = await User.findOne({ GoogleID });
         if (!user) {
+            const user2 = await User.findOne({ email });
+            if(user2){
+                user2.GoogleID=GoogleID;
+                user2.save();
+                res.status(201).json({
+                    message: 'User created successfully',
+                    user: user2
+                });
+            }
             const newUser = new User({ GoogleID,name,email });
         await newUser.save();  // Lưu người dùng mới vào cơ sở dữ liệu
 
@@ -44,9 +53,6 @@ const login_google =async (req, res) => {
             user: newUser
         });
         }else{
-            if (!user.isVerified) {
-                return res.status(403).json({ message: 'Tài khoản chưa xác thực. Vui lòng kiểm tra email để xác thực tài khoản.' });
-            }
             const token = jwt.sign({ userId: user._id, role: user.role }, 
                 process.env.JWT_SECRET, { expiresIn: "1h" });
             res.status(200).json({ message: 'Login successful',  user, token  });            
