@@ -2,6 +2,7 @@
 const User = require('../modules/user'); // Đường dẫn đến tệp chứa schema User
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const getCookie = require('../services/getCookie');
 
 const createUser = async (req, res) => {
     console.log(req.body);
@@ -38,8 +39,8 @@ const createUser = async (req, res) => {
             id_owner,
             resetCode,
             resetCodeExpire,
-            isVerified: false,
         });
+
         console.log("Tạo thành công người dùng mới");
 
         // Lưu người dùng vào cơ sở dữ liệu
@@ -141,6 +142,8 @@ const showUser = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
+    const user = getCookie.getCookie('user');
+    console.log(user);
     const userId = req.params.id; // Get the user ID from the URL parameters
     try {
         const deletedUser = await User.findByIdAndDelete(userId);
@@ -149,6 +152,7 @@ const deleteUser = async (req, res) => {
                 message: 'User not found!'
             });
         }
+        
         res.status(200).json({
             message: 'User deleted successfully!'
         });

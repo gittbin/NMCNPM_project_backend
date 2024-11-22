@@ -7,12 +7,11 @@ const userSchema = new mongoose.Schema({
     GoogleID: { type: String, default: null },
     role: {
         type: String,
-        default: null,
+        default: "Admin",
     },
     id_owner: { type: mongoose.Schema.Types.ObjectId },// Thêm trường email_owner
     resetCode: String,
     resetCodeExpire:Date,
-    isVerified: { type: Boolean, default: false },
 }, { timestamps: true });
 
 // Middleware trước khi lưu tài liệu
