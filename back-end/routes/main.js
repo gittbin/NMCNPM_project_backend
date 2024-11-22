@@ -7,7 +7,6 @@ const sell=require('./sell.js')
 const home=require('./home.js')
 const Import = require('./import.js')
 const chat=require('./chat.js')
-const Import = require('./import.js')
 function routes(app){
     app.use('/',temperary_public)    
     app.use('/login',login);
@@ -19,7 +18,6 @@ function routes(app){
     app.use('/home',home)
     app.use('/import',Import)
     app.use('/chat',chat)
-    
     app.use('/import',Import)
 }
 module.exports = routes
