@@ -28,7 +28,11 @@ const createRole = async (req, res) => {
 
 const showRole = async (req, res) => {
     try {
-        const roles_data = await Roles.find({ delete: false });
+        const excludedId = 'Admin';
+        const roles_data = await Roles.find({ 
+            delete: false, 
+            role: { $ne: excludedId } 
+        });
         res.json(roles_data);
     } catch (error) {
         console.error('Khong lay duoc data Role', error); 
