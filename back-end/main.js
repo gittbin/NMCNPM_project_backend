@@ -8,7 +8,6 @@ const mongodb=require('./modules/config/db')
 const bodyParser = require('body-parser');
 const setupSocket = require("./modules/config/socket");
 require('dotenv').config();
-console.log("JWT_SECRET:", process.env.JWT_SECRET);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('combined'))
