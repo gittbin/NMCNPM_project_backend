@@ -6,7 +6,7 @@ const path = require('path');
 const app = express()
 const mongodb=require('./modules/config/db')
 const bodyParser = require('body-parser');
-
+const setupSocket = require("./modules/config/socket");
 require('dotenv').config();
 console.log("JWT_SECRET:", process.env.JWT_SECRET);
 
@@ -17,7 +17,8 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 mongodb()
 routes(app)
-app.listen(5000, () => {
+const server =app.listen(5000, () => {
     console.log('Server đang chạy tại http://localhost:5000');
 });
-
+const io =setupSocket(server);
+require('./controllers/chat')(io)

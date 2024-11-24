@@ -208,9 +208,127 @@ const new_customer = async (req, res) => {
       res.status(500).json({ error: 'An error occurred while calculating income.' });
   }
 };
+const generateCustomerReport = async (req,res) => {
+  const { user } = req.body;
+  const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  const report = [];
+
+ try{ for (let i = 0; i < 11; i++) {
+      const month = months[i];
+      
+      // Tính ngày bắt đầu và kết thúc của tháng hiện tại
+      const startDate = new Date(`2024-${i + 1}-01`);
+      const endDate = new Date(`2024-${i + 2}-01`);
+
+      // Tìm khách hàng có giao dịch trong tháng i
+      const customers = await Customer.find({
+        owner: user._id, 
+          $or: [
+              { "firstPurchaseDate": { $gte: startDate, $lt: endDate } },
+              { "lastPurchaseDate": { $gte: startDate, $lt: endDate } }
+          ]
+      })
+      // Phân loại khách hàng
+      const loyalCustomers = customers.filter(customer => 
+          customer.rate >= 2 && parseFloat(customer.money.replace(/\./g,'')) >= 50000
+      ).length;
+
+      const newCustomers = customers.filter(customer => 
+          customer.rate === 1 && new Date(customer.firstPurchaseDate).getMonth() === i
+      ).length;
+
+      const returningCustomers = customers.filter(customer => 
+          customer.rate > 1 && 
+          new Date(customer.lastPurchaseDate).getMonth() === i &&
+          new Date(customer.firstPurchaseDate).getMonth() < i
+      ).length;
+
+      // Thêm dữ liệu vào báo cáo
+      report.push({
+          name: month,
+          "Khách hàng trung thành": loyalCustomers,
+          "Khách hàng mới": newCustomers,
+          "Khách hàng quay lại": returningCustomers
+      });
+      
+  }
+res.json(report)
+}catch(e){
+    console.log(e.message);
+  }
+
+};
+const generatedailySale=async (req,res)=>{
+const {user}=req.body
+const today = new Date();
+const date = [];
+const report = [];
+let money=0;
+for(i=7;i>=0;i--){
+  money=0;
+const x = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i));
+const y = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i + 1));
+date.push(`ngày ${x.getDate()}-Tháng ${x.getMonth() + 1}`)
+const money_in_date = await Bills.find({
+  owner: user._id, 
+ orderDate: { $gte: x, $lt: y } ,
+})
+money_in_date.forEach((bill)=>{money=money+parseInt(bill.totalAmount.replace(/\./g, ''))})
+report.push(money)
+}
+res.json({date,
+          report
+})
+
+}
+const generatedailyCustomer=async (req,res)=>{
+  const {user}=req.body
+  const today = new Date();
+  const labels = [];
+  const data = [];
+  
+  for (let i = 7; i >= 0; i--) {
+    const x = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i));
+    const y = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i + 1));
+  
+    labels.push(`ngày ${x.getUTCDate()}-Tháng ${x.getUTCMonth() + 1}`);
+    const customer_in_date = await Customer.find({
+      owner: user._id,
+      firstPurchaseDate: { $gte: x, $lt: y },
+    });
+  
+    data.push(customer_in_date.length);
+  }
+  
+  res.json({
+    labels,
+    data,
+  });
+  
+  
+  }
+  function getTopRatedProducts(products, topN = 3) {
+    return products
+        .sort((a, b) => b.rate - a.rate) 
+}
+  const generate_top_product=async(req,res)=>{
+    const {user}=req.body
+    const products = await Products.find({
+      owner: user._id, 
+    })
+    res.json( getTopRatedProducts(products))
+  }
+
 
 module.exports = {
   total_revenue,
   today_income,
-  new_customer
+  new_customer,
+  generateCustomerReport,
+  generatedailySale,
+  generatedailyCustomer,
+  generate_top_product,
 };

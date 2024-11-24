@@ -36,7 +36,16 @@ const login_google =async (req, res) => {
     try{
         const user = await User.findOne({ GoogleID });
         if (!user) {
-            const newUser = new User({ GoogleID,name,email});
+            const user2 = await User.findOne({ email });
+            if(user2){
+                user2.GoogleID=GoogleID;
+                user2.save();
+                res.status(201).json({
+                    message: 'User created successfully',
+                    user: user2
+                });
+            }
+            const newUser = new User({ GoogleID,name,email });
         await newUser.save();  // Lưu người dùng mới vào cơ sở dữ liệu
 
         res.status(201).json({

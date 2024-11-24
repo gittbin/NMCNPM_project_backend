@@ -12,7 +12,7 @@ const show=async (req, res) => {
     const { user } = req.body;
     try {
         // Tìm user theo email
-        const products = await Products.find({ owner: user._id })
+        const products = await Products.find({ owner: user.id_owner })
         res.json(products);
     } catch (error) {
         console.error('show error', error); 
@@ -153,8 +153,6 @@ const show_detail = async (req, res) => {
 }
 const create=async (req, res) => {
     const { user,newPr,detail } = req.body;
-    let i=user.rights.includes("add_product");
-    if(!i){return res.status(404).json({ message: "you don't have right to create new goods" });}
     console.log({
         ...newPr,
     });

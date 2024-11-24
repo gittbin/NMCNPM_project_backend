@@ -8,21 +8,31 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         default: "Admin",
+        default: "Admin",
     },
     id_owner: { type: mongoose.Schema.Types.ObjectId },// Thêm trường email_owner
     resetCode: String,
     resetCodeExpire:Date,
+    isVerified: { type: Boolean, default: false },
+    avatar: { type: String}
 }, { timestamps: true });
 
 // Middleware trước khi lưu tài liệu
+// Middleware trước khi lưu tài liệu
 userSchema.pre('save', function (next) {
-    // Gán giá trị cho email_owner bằng email
+    // Gán giá trị mặc định cho id_owner nếu chưa có
     if (!this.id_owner) {
-        this.id_owner = this._id; // Gán email_owner
+        this.id_owner = this._id;
     }
-    next(); // Tiến hành lưu
-});
 
+    // Gán avatar ngẫu nhiên từ DiceBear nếu chưa có
+    if (!this.avatar) {
+        const randomSeed = Math.random().toString(36).substring(2); // Tạo chuỗi ngẫu nhiên
+        this.avatar = `https://api.dicebear.com/6.x/adventurer/svg?seed=${randomSeed}`;
+    }
+
+    next(); // Tiếp tục lưu tài liệu
+});
 const User = mongoose.model('Users', userSchema, 'Users');
 
 module.exports = User;
