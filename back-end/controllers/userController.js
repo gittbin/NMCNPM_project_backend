@@ -223,8 +223,8 @@ const showUser = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
-    const userId = req.params.id; // Get the user ID from the URL parameters
-    console.log(req.body);
+    const userId = req.params.id; 
+    
     try {
         const deletedUser = await User.findByIdAndDelete(userId);
         if (!deletedUser) {
