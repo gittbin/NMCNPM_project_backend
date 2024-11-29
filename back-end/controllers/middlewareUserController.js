@@ -5,9 +5,11 @@ const authorize = (permission) => {
         console.log(req.body);
         try {
             const userRole = req.body.user.role;  
+            const userId = req.body.user.id_owner;
             console.log(userRole);
-            
-
+            if(userRole==="Admin"){
+                return next();
+            }
             if (!userRole) {
                 return res.status(400).json({ message: "Role không được cung cấp" });
             }
@@ -15,7 +17,7 @@ const authorize = (permission) => {
             console.log(`Đang kiểm tra quyền của vai trò: ${userRole}`);
 
             // Truy vấn quyền của vai trò từ database
-            const roleData = await Role.findOne({ role: userRole });
+            const roleData = await Role.findOne({ role: userRole, id_owner:userId });
 
             if (!roleData) {
                 return res.status(404).json({ message: "Vai trò không tồn tại" });
