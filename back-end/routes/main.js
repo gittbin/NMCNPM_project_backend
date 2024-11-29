@@ -6,6 +6,7 @@ const accounts = require('./accounts.route')
 const sell=require('./sell.js')
 const home=require('./home.js')
 const chat=require('./chat.js')
+const profile=require('./profile.js')
 function routes(app){
     app.use('/',temperary_public)    
     app.use('/login',login);
@@ -16,6 +17,7 @@ function routes(app){
     app.use('/sell',sell)
     app.use('/home',home)
     app.use('/chat',chat)
+    app.use('/profile',profile)
     
 }
 module.exports = routes
