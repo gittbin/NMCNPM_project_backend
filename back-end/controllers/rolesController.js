@@ -2,7 +2,7 @@ const Roles = require('../modules/roles'); // Import mô-đun vai trò
 
 // Hàm tạo vai trò mới
 const createRole = async (req, res) => {
-    const { role, description, permissions } = req.body; // Nhận dữ liệu từ frontend
+    const { role, description, permissions, id_owner } = req.body; // Nhận dữ liệu từ frontend
     try {
         // Tạo vai trò mới
         const newRole = new Roles({
@@ -12,6 +12,7 @@ const createRole = async (req, res) => {
             createAt: new Date(),
             deleteAt: null,
             delete: false,
+            id_owner,
         });
         
         // Lưu vai trò vào cơ sở dữ liệu
@@ -29,8 +30,10 @@ const createRole = async (req, res) => {
 const showRole = async (req, res) => {
     try {
         const excludedId = 'Admin';
+        const userId = req.query.userId;
         const roles_data = await Roles.find({ 
             delete: false, 
+            id_owner: userId,
             role: { $ne: excludedId } 
         });
         res.json(roles_data);

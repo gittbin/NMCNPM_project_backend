@@ -15,9 +15,7 @@ console.log(email, password)
 if (user.password!==password) {
             res.status(400).json({ message: 'wrong password' });
         }else{
-            const token = jwt.sign({ userId: user._id, role: user.role }, 
-                                    process.env.JWT_SECRET, { expiresIn: "1h" });
-            res.status(200).json({ message: 'Login successful',  user, token  });
+            res.status(200).json({ message: 'Login successful',  user});
         }
         }
         
@@ -53,9 +51,7 @@ const login_google =async (req, res) => {
             user: newUser
         });
         }else{
-            const token = jwt.sign({ userId: user._id, role: user.role }, 
-                process.env.JWT_SECRET, { expiresIn: "1h" });
-            res.status(200).json({ message: 'Login successful',  user, token  });            
+            res.status(200).json({ message: 'Login successful',  user});            
         }
 
     }catch (error) {

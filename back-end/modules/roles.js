@@ -6,7 +6,8 @@ const roleSchema = new mongoose.Schema({
     permissions: { type: [String], default: [] },
     createAt: { type: Date, default: Date.now },
     deleteAt: { type: Date, default: null },
-    delete: { type: Boolean, default: false }
+    delete: { type: Boolean, default: false },
+    id_owner: { type: mongoose.Schema.Types.ObjectId ,ref:"Users",require:true},
 });
 
 module.exports = mongoose.model('Role', roleSchema,'Roles');
