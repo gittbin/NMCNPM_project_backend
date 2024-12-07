@@ -4,6 +4,7 @@ const orderHistorySchema = new mongoose.Schema({
     supplierId:{type: mongoose.Schema.Types.ObjectId},
     generalStatus:{type: String},
     amount:{type: String},
+    tax:{type:Number},
     ownerId:{type: mongoose.Schema.Types.ObjectId},
 },{ 
     timestamps: true,

@@ -68,6 +68,7 @@ const saveOrderHistory = async (req, res) => {
           0
         ).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'),
         ownerId: new mongoose.Types.ObjectId(req.body.user.ownerId),
+        tax: req.body.tax
       });
 
       const savedOrder = await ord.save({ session });
@@ -100,6 +101,7 @@ const saveOrderHistory = async (req, res) => {
           userName: req.body.user.name,
           details: "create a new item",
           ownerId: new mongoose.Types.ObjectId(req.body.user.ownerId),
+          tax:req.body.tax,
         });
       });
 
@@ -128,12 +130,17 @@ const saveOrderHistory = async (req, res) => {
     // Commit transaction
     await session.commitTransaction();
     session.endSession();
+    res.status(200).send({ message: "Order history saved successfully!" });
   } catch (error) {
     // Nếu có lỗi, rollback transaction
     await session.abortTransaction();
     session.endSession();
     console.error("Error during the transaction:", error);
-    throw error; // Ném lại lỗi để xử lý ở nơi gọi
+
+    // Gửi phản hồi lỗi
+    res
+      .status(500)
+      .send({ message: "An error occurred during the transaction", error });
   }
 };
 
@@ -326,6 +333,7 @@ const getSupplierByOrderId = async (req, res) => {
       },
       {
         $project: {
+          tax: 1,
           supplierName: "$supplierDetails.name", // Lấy tên nhà cung cấp
           supplierEmail: "$supplierDetails.email", // Lấy email nhà cung cấp
         },
@@ -334,6 +342,7 @@ const getSupplierByOrderId = async (req, res) => {
     if (orders.length === 0) {
       return res.status(404).json({ error: "Order not found" });
     }
+    console.log(orders[0])
     res.json(orders[0]);
   } catch (err) {
     console.error("Error:", err);

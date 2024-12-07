@@ -8,6 +8,7 @@ const loggingOrderSchema = new mongoose.Schema({
     userName: {type: String},
     details:{type: String },
     ownerId:{type: mongoose.Schema.Types.ObjectId},
+    tax:{type:Number},
 },{ 
     timestamps: true,
 });
