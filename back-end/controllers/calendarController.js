@@ -32,7 +32,8 @@ const createEvent = async (req, res) => {
 // API GET - Lấy tất cả sự kiện
 const getEvents = async (req, res) => {
   try {
-    const events = await Event.find();
+    const userId = req.query.userId;
+    const events = await Event.find({id_owner:userId});
 
     // Định dạng lại dữ liệu nếu cần thiết trước khi gửi
     const formattedEvents = events.map(event => ({

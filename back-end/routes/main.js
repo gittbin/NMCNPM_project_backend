@@ -19,6 +19,8 @@ function routes(app){
     app.use('/sell',sell)
     app.use('/home',home)
     app.use('/chat',chat)
+    app.use('/profile',profile)
+    app.use('/calendar',calendar)
     
 }
 module.exports = routes
