@@ -8,11 +8,11 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         default: "Admin",
+        default: "Admin",
     },
-    id_owner: { type: mongoose.Schema.Types.ObjectId },// Thêm trường email_owner
+    id_owner: { type: mongoose.Schema.Types.ObjectId ,ref: 'Users',required:true },// Thêm trường email_owner
     resetCode: String,
     resetCodeExpire:Date,
-    isVerified: { type: Boolean, default: false },
     avatar: { type: String}
 }, { timestamps: true });
 

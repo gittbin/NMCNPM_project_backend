@@ -181,7 +181,7 @@ const create=async (req, res) => {
 const get_history = async (req, res) => {
     const { user } = req.body;
     try {
-        const activities = await History.find({ owner: user._id }) // Lấy lịch sử hoạt động của người chủ
+        const activities = await History.find({ owner: user.id_owner }) // Lấy lịch sử hoạt động của người chủ
             .populate('employee', 'name email') // Lấy tên nhân viên
             .sort({ timestamp: -1 }) // Sắp xếp theo thời gian
             .select('employee product action timestamp details') // Chọn các trường cần thiết

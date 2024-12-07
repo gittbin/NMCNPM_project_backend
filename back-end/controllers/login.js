@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const User =require('../modules/user')
 const User_temporary =require('../modules/Temporary_user')
-const jwt = require("jsonwebtoken");
 const login_raw=async (req, res) => {
     const { email, password } = req.body;
 console.log(email, password)
@@ -15,9 +14,7 @@ console.log(email, password)
 if (user.password!==password) {
             res.status(400).json({ message: 'wrong password' });
         }else{
-            const token = jwt.sign({ userId: user._id, role: user.role }, 
-                                    process.env.JWT_SECRET, { expiresIn: "1h" });
-            res.status(200).json({ message: 'Login successful',  user, token  });
+            res.status(200).json({ message: 'Login successful',  user});
         }
         }
         
@@ -53,9 +50,7 @@ const login_google =async (req, res) => {
             user: newUser
         });
         }else{
-            const token = jwt.sign({ userId: user._id, role: user.role }, 
-                process.env.JWT_SECRET, { expiresIn: "1h" });
-            res.status(200).json({ message: 'Login successful',  user, token  });            
+            res.status(200).json({ message: 'Login successful',  user});            
         }
 
     }catch (error) {
@@ -74,9 +69,9 @@ console.log(name, email,password,confirm,code);
             if (user.code !== code || user.resetCodeExpire < Date.now()) {
                 return res.status(400).json({ message: 'Mã xác nhận không hợp lệ hoặc đã hết hạn!' });
             }else{
-                const newUser = new User({ name, email, password });
+                const newUser = new User({ name, email, password});
                 newUser.save();
-                console.log(newUser)
+                user = await User.findOne({ email });
                return  res.status(200).json({ message: 'User created successfully' ,user:newUser});
             }
         }
@@ -89,7 +84,7 @@ console.log(name, email,password,confirm,code);
                 // Xóa tất cả người dùng tạm thời có email này
                 await User_temporary.deleteMany({ email });
             }
-        const newUser = new User_temporary({ name, email, password });
+        const newUser = new User_temporary({ name, email, password});
         await newUser.save();  // Lưu người dùng mới vào cơ sở dữ liệu
         if (!newUser) {
             return res.status(400).json({ message: 'Có lỗi xảy ra khi tạo người dùng mới!' });
