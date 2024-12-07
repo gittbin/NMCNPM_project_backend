@@ -96,7 +96,7 @@ const saveOrderHistory = async (req, res) => {
         return new LoggingOrder({
           orderId: savedOrder._id,
           orderDetailId: savedOrderDetail._id, // Sử dụng _id của từng order detail đã lưu
-          status: "create", // Lấy status tương ứng
+          status: savedOrderDetail.status ==="deliveried"?"deliveried":"create", // Lấy status tương ứng
           userId: req.body.user.id,
           userName: req.body.user.name,
           details: "create a new item",
