@@ -321,7 +321,9 @@ const generatedailyCustomer=async (req,res)=>{
     })
     res.json( getTopRatedProducts(products))
   }
+const total_pending=async(req,res)=>{
 
+}
 
 module.exports = {
   total_revenue,
@@ -331,4 +333,5 @@ module.exports = {
   generatedailySale,
   generatedailyCustomer,
   generate_top_product,
+  total_pending
 };
