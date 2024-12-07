@@ -4,7 +4,6 @@ const User_temporary =require('../modules/Temporary_user')
 const crypto = require('crypto');
 const { console } = require('inspector');
 const nodemailer = require('nodemailer');
-const getCookie = require('../services/getCookie');
 
 const createUser = async (req, res) => {
     console.log("req.body:", req.body);
