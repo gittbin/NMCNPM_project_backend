@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const User =require('../modules/user')
 const User_temporary =require('../modules/Temporary_user')
-const jwt = require("jsonwebtoken");
 const login_raw=async (req, res) => {
     const { email, password } = req.body;
 console.log(email, password)

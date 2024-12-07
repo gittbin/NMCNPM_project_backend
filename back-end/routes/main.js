@@ -6,6 +6,7 @@ const accounts = require('./accounts.route')
 const sell=require('./sell.js')
 const home=require('./home.js')
 const chat=require('./chat.js')
+const profile=require('./profile.js')
 const calendar=require('./calendar.js')
 
 function routes(app){
@@ -18,7 +19,6 @@ function routes(app){
     app.use('/sell',sell)
     app.use('/home',home)
     app.use('/chat',chat)
-    app.use('/calendar',calendar)
     
 }
 module.exports = routes
