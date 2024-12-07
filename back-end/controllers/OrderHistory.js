@@ -191,6 +191,7 @@ const getOrder = async (req, res) => {
       },
       {
         $project: {
+          tax:1,
           supplierId: 1,
           generalStatus: 1,
           amount: 1,
@@ -201,13 +202,6 @@ const getOrder = async (req, res) => {
         },
       },
     ]);
-
-    if (result.length === 0) {
-      return res.status(404).json({
-        message: "Order not found or no supplier associated with this order.",
-      });
-    }
-
     // Trả về kết quả
     return res.status(200).json(result);
   } catch (error) {
@@ -253,6 +247,7 @@ const updateOrderHistory = async (req, res) => {
               userName: newOrder.userName,
               details: newOrder.notes,
               ownerId: newOrder.ownerId,
+              tax: newOrder.tax,
             });
             console.log(newLogging);
             await newLogging.save();
@@ -267,7 +262,7 @@ const updateOrderHistory = async (req, res) => {
       } else if (newOrder.status === "Canceled") {
         const promises = listOrderChange.map(async (orderChange) => {
           try {
-            orderChange.status = "Canceled";
+            orderChange.status = "canceled";
             orderChange.updatedAt = newOrder.date;
             await orderChange.save();
 
@@ -277,9 +272,13 @@ const updateOrderHistory = async (req, res) => {
               status: "delete",
               userId: newOrder.userid,
               userName: newOrder.userName,
+              ownerId: newOrder.ownerId,
               details: newOrder.notes,
+              tax:newOrder.tax,
             });
+            console.log(newLogging)
             await newLogging.save();
+
           } catch (error) {
             console.error(
               `Error canceling order detail ${orderChange._id}:`,
