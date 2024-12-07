@@ -11,7 +11,8 @@ const get_profile=async (req, res) => {
         if (!user2) {
             return res.status(400).json({ message: 'Invalid' });
         }else{
-        const role=await Roles.findOne({id_owner: user2.id_owner._id})
+        const role=await Roles.findOne({id_owner: user2.id_owner._id,role: user2.role})
+        console.log({ ...user2,right:role })
             res.status(200).json({ ...user2,right:role });
         }
         
