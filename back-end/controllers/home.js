@@ -1,6 +1,7 @@
 const Products = require("../modules/products");
 const Bills = require("../modules/bill");
 const Customer = require("../modules/customer");
+const orderDetail=require("../modules/orderHistory")
 const total_revenue = async (req, res) => {
   const {user} =req.body
 
@@ -322,9 +323,20 @@ const generatedailyCustomer=async (req,res)=>{
     res.json( getTopRatedProducts(products))
   }
 const total_pending=async(req,res)=>{
+  const {user}=req.body;
+
+    const total1=await orderDetail.find({ownerId:user._id,generalStatus:"pending"});
+    const total2=await orderDetail.find({ownerId:user._id});
+    let i=(total1.length/total2.length)*100
+    res.json({
+    total:total1.length,
+    percent:i.toFixed(2)+ "%"
+    });
 
 }
-
+const recent_activity=async(req,res)=>{
+const {user}=req.body
+}
 module.exports = {
   total_revenue,
   today_income,
