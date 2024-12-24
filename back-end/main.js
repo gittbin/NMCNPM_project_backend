@@ -7,8 +7,11 @@ const app = express()
 const mongodb=require('./modules/config/db')
 const bodyParser = require('body-parser');
 const setupSocket = require("./modules/config/socket");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swaggerConfig");
 require('dotenv').config();
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('combined'))
 app.use(express.json());
