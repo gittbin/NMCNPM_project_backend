@@ -26,39 +26,46 @@ if (user.password!==password) {
         res.status(500).json({ message: 'Error logging in', error });
     }
 }
-const login_google =async (req, res) => {
-    const { GoogleID,family_name,given_name,email} = req.body;
-    let name=family_name+" "+given_name;
-    console.log(name,GoogleID);
-    try{
-        const user = await User.findOne({ GoogleID });
+const login_google = async (req, res) => {
+    const { GoogleID, family_name, given_name, email } = req.body;
+    let name = `${family_name} ${given_name}`;
+    console.log(name, GoogleID);
+
+    try {
+        let user = await User.findOne({ GoogleID });
+
+        // Nếu không tìm thấy tài khoản với GoogleID, kiểm tra email
         if (!user) {
-            const user2 = await User.findOne({ email });
-            if(user2){
-                user2.GoogleID=GoogleID;
-                user2.save();
-                res.status(201).json({
+            user = await User.findOne({ email });
+
+            if (user) {
+                // Nếu tài khoản đã tồn tại với email, gán thêm GoogleID và lưu lại
+                user.GoogleID = GoogleID;
+                await user.save();
+                return res.status(200).json({
+                    message: 'Login successful',
+                    user
+                });
+            } else {
+                // Tạo tài khoản mới nếu không tìm thấy cả email và GoogleID
+                const newUser = new User({ GoogleID, name, email });
+                await newUser.save(); // Lưu người dùng mới vào cơ sở dữ liệu
+
+                return res.status(201).json({
                     message: 'User created successfully',
-                    user: user2
+                    user: newUser
                 });
             }
-            const newUser = new User({ GoogleID,name,email });
-        await newUser.save();  // Lưu người dùng mới vào cơ sở dữ liệu
-
-        res.status(201).json({
-            message: 'User created successfully',
-            user: newUser
-        });
-        }else{
-            res.status(200).json({ message: 'Login successful',  user});            
         }
 
-    }catch (error) {
+        // Trả về nếu đã tìm thấy tài khoản với GoogleID
+        res.status(200).json({ message: 'Login successful', user });
+    } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ message: 'Error logging in', error });
     }
+};
 
-}
 const sign_up = async (req, res) => {
     const { name, email, password,confirm,code} = req.body;
 console.log(name, email,password,confirm,code);

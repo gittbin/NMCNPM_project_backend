@@ -2,6 +2,10 @@ const Products = require("../modules/products");
 const Bills = require("../modules/bill");
 const Customer = require("../modules/customer");
 const orderDetail=require("../modules/orderHistory")
+const Roles = require("../modules/roles")
+const Supplier = require("../modules/supplier")
+const supplierCHistory =require('../modules/history_change_supplier')
+const History=require("../modules/history")
 const total_revenue = async (req, res) => {
   const {user} =req.body
 
@@ -13,14 +17,14 @@ const total_revenue = async (req, res) => {
     const todayString = today.toISOString().substring(0, 10);
     const yesterdayString = yesterday.toISOString().substring(0, 10);
     // Fetch tất cả các hóa đơn
-    const bills = await Bills.find({owner:user._id});
+    const bills = await Bills.find({owner:user.id_owner});
 
     // Tính tổng doanh thu cho hôm nay và hôm qua
     let totalRevenueToday = 0;
     let totalRevenueYesterday = 0;
     
     bills .forEach(bill => {
-      const billDate = new Date(bill.orderDate); // Giả sử bạn có trường createdAt
+      const billDate = new Date(bill.orderDate);
       // Tính doanh thu cho ngày hôm nay
       const billDateString = billDate.toISOString().substring(0, 10);
 
@@ -86,7 +90,7 @@ const today_income = async (req, res) => {
       const yesterdayString = yesterday.toISOString().substring(0, 10);
       
       // Fetch tất cả các hóa đơn
-      const bills = await Bills.find({ owner: user._id }).populate('items.productID');
+      const bills = await Bills.find({ owner: user.id_owner }).populate('items.productID');
       // Tính tổng doanh thu cho hôm nay và hôm qua
       let totalRevenueToday = 0;
       let totalRevenueYesterday = 0;
@@ -161,8 +165,7 @@ const new_customer = async (req, res) => {
       const yesterdayString = yesterday.toISOString().substring(0, 10);
       
       // Fetch tất cả các hóa đơn
-      const customers = await Customer.find({ owner: user._id });
-      // Tính tổng doanh thu cho hôm nay và hôm qua
+      const customers = await Customer.find({ owner: user.id_owner });
       let customerToday = 0;
       let customerYesterday = 0;
 
@@ -226,7 +229,7 @@ const generateCustomerReport = async (req,res) => {
 
       // Tìm khách hàng có giao dịch trong tháng i
       const customers = await Customer.find({
-        owner: user._id, 
+        owner: user.id_owner, 
           $or: [
               { "firstPurchaseDate": { $gte: startDate, $lt: endDate } },
               { "lastPurchaseDate": { $gte: startDate, $lt: endDate } }
@@ -274,7 +277,7 @@ const x = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.g
 const y = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i + 1));
 date.push(`ngày ${x.getDate()}-Tháng ${x.getMonth() + 1}`)
 const money_in_date = await Bills.find({
-  owner: user._id, 
+  owner: user.id_owner, 
  orderDate: { $gte: x, $lt: y } ,
 })
 money_in_date.forEach((bill)=>{money=money+parseInt(bill.totalAmount.replace(/\./g, ''))})
@@ -297,13 +300,12 @@ const generatedailyCustomer=async (req,res)=>{
   
     labels.push(`ngày ${x.getUTCDate()}-Tháng ${x.getUTCMonth() + 1}`);
     const customer_in_date = await Customer.find({
-      owner: user._id,
-      firstPurchaseDate: { $gte: x, $lt: y },
+      owner: user.id_owner,
+      createdAt: { $gte: x, $lt: y },
     });
   
     data.push(customer_in_date.length);
   }
-  
   res.json({
     labels,
     data,
@@ -318,25 +320,72 @@ const generatedailyCustomer=async (req,res)=>{
   const generate_top_product=async(req,res)=>{
     const {user}=req.body
     const products = await Products.find({
-      owner: user._id, 
+      owner: user.id_owner, 
     })
     res.json( getTopRatedProducts(products))
   }
-const total_pending=async(req,res)=>{
-  const {user}=req.body;
+  const total_pending=async(req,res)=>{
+    const {user}=req.body;
+      const total1=await orderDetail.find({ownerId:user.id_owner,generalStatus:"pending"});
+      const total2=await orderDetail.find({ownerId:user.id_owner});
+      let i=(total1.length/total2.length)*100
+      res.json({
+      total:total1.length,
+      percent:i.toFixed(2)+ "%"
+      });
+  
+  }
+  const recent_activity = async (req, res) => {
+    const { user } = req.body;
+    try {
+      // Truy vấn sự kiện từ ba database khác nhau
+      const eventsA = await Roles.find({
+        owner: user.id_owner,
+      });
+      const eventsB = await History.find({
+        owner: user.id_owner,
+      });
+      const eventsC = await supplierCHistory.find({
+        owner: user.id_owner,
+      });
+  
+      // Hợp nhất các sự kiện từ ba collection
+      const allEvents = [
+        ...eventsA.map(event => ({
+          type: "feed-item-success",
+          detail: "create role : " + event.role,
+          date: new Date(event.createAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) // Chỉ lấy tháng và ngày
+        })),
+        ...eventsB.map(event => ({
+          type: "feed-item-danger",
+          detail: event.product + " <br /> " + event.action + " <br /> " + event.details,
+          date: new Date(event.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) // Chỉ lấy tháng và ngày
+        })),
+        ...eventsC.map(event => ({
+          type: "feed-item-infor",
+          detail: event.supplier + " <br /> " + event.action + " <br /> " + event.details,
+          date: new Date(event.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) // Chỉ lấy tháng và ngày
+        })),
+      ];
+  
+      // Sắp xếp tất cả các sự kiện theo thời gian giảm dần
+      const sortedEvents = allEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+      const recentEvents = sortedEvents.slice(0, 7);
+  
+      // Trả về kết quả
+      res.json({
+        events: recentEvents,
+      });
+  
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  
+  
+};
 
-    const total1=await orderDetail.find({ownerId:user._id,generalStatus:"pending"});
-    const total2=await orderDetail.find({ownerId:user._id});
-    let i=(total1.length/total2.length)*100
-    res.json({
-    total:total1.length,
-    percent:i.toFixed(2)+ "%"
-    });
-
-}
-const recent_activity=async(req,res)=>{
-const {user}=req.body
-}
 module.exports = {
   total_revenue,
   today_income,
@@ -345,5 +394,6 @@ module.exports = {
   generatedailySale,
   generatedailyCustomer,
   generate_top_product,
-  total_pending
+  total_pending,
+  recent_activity
 };

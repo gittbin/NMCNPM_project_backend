@@ -61,7 +61,7 @@ const deleteRole = async (req, res) => {
 
 const editRole = async (req, res) => {
     try {
-        const rolesWithPermissions = req.body;
+        const rolesWithPermissions = req.body.rolesWithPermissions;
         for (const role of rolesWithPermissions) {
             await Roles.findByIdAndUpdate(
                 { _id: role._id }, 

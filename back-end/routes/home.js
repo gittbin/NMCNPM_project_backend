@@ -11,4 +11,5 @@ router.post('/generatedailySale', home.generatedailySale);
 router.post('/generatedailyCustomer', home.generatedailyCustomer);
 router.post('/generate_top_product', home.generate_top_product);
 router.post('/total_pending',home.total_pending)
+router.post('/recent_activity',home.recent_activity)
 module.exports = router;

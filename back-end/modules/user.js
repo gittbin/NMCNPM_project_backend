@@ -8,15 +8,13 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         default: "Admin",
-        default: "Admin",
     },
-    id_owner: { type: mongoose.Schema.Types.ObjectId ,ref: 'Users',required:true },// Thêm trường email_owner
+    id_owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' }, // Bỏ required
     resetCode: String,
-    resetCodeExpire:Date,
-    avatar: { type: String}
+    resetCodeExpire: Date,
+    avatar: { type: String }
 }, { timestamps: true });
 
-// Middleware trước khi lưu tài liệu
 // Middleware trước khi lưu tài liệu
 userSchema.pre('save', function (next) {
     // Gán giá trị mặc định cho id_owner nếu chưa có
@@ -32,6 +30,7 @@ userSchema.pre('save', function (next) {
 
     next(); // Tiếp tục lưu tài liệu
 });
+
 const User = mongoose.model('Users', userSchema, 'Users');
 
 module.exports = User;
