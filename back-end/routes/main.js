@@ -9,6 +9,7 @@ const chat=require('./chat.js')
 const profile=require('./profile.js')
 const calendar=require('./calendar.js')
 const Import = require("./import.js");
+const Bank = require("./bank.js");
 function routes(app){
     app.use('/',temperary_public)    
     app.use('/login',login);
@@ -22,6 +23,7 @@ function routes(app){
     app.use('/profile',profile)
     app.use('/calendar',calendar)
     app.use("/import", Import);
+    app.use("/bank", Bank);
     
 }
 module.exports = routes;

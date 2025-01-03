@@ -149,7 +149,7 @@ const get_history = async (req, res) => {
   const { user } = req.body;
   try {
     console.log(user);
-    const activities = await Bills.find({ owner: user._id }) // Lấy lịch sử hoạt động của người chủ
+    const activities = await Bills.find({ owner: user.id_owner }) // Lấy lịch sử hoạt động của người chủ
       .populate("owner") // Lấy tất cả thông tin của chủ sở hữu
       .populate("creater") // Lấy tất cả thông tin của chủ sở hữu
       .populate("customerId") // Lấy tất cả thông tin của khách hàng nếu cần

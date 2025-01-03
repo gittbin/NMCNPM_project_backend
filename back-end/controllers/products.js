@@ -217,7 +217,7 @@ const get_supplier=async(req, res)=>{
 const create_supplier=async(req,res)=>{
     const { name, email, phone, user } = req.body;
     try {
-      let check = await Suppliers.findOne({ phone });
+      let check = await Suppliers.findOne({ owner: user.id_owner, phone });
       if (check) {
         return res.json({ message: "Số điện thoại này đã được đăng ký" });
       }
@@ -304,7 +304,7 @@ const edit_supplier=async(req,res)=>{
 const get_history_supplier=async(req,res)=>{
     const { user } = req.body;
     try {
-        const activities = await supplierCHistory.find({ owner: user._id }) // Lấy lịch sử hoạt động của người chủ
+        const activities = await supplierCHistory.find({ owner: user.id_owner }) // Lấy lịch sử hoạt động của người chủ
             .populate('employee', 'name email') // Lấy tên nhân viên
             .populate('supplier')
             .sort({ timestamp: -1 }) // Sắp xếp theo thời gian
