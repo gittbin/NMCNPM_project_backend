@@ -43,19 +43,23 @@ const template = (listOrder) => {
   );
 };
 const saveOrderHistory = async (req, res) => {
-  const session = await mongoose.startSession(); // Bắt đầu session transaction
+  const session = await mongoose.startSession(); 
   session.startTransaction();
+
   try {
-    // Lấy dữ liệu từ req.body
     const listOrder = Object.values(req.body.dataForm);
-    console.log(req.body);
-    // Dùng for...of để xử lý bất đồng bộ đúng cách
+    const ownerId = new mongoose.Types.ObjectId(req.body.user.ownerId);
+    const tax = req.body.tax;
+    const userId = req.body.user.id;
+    const userName = req.body.user.name;
+
+    const allPromises = [];
+
+    const productUpdates = [];
+
     for (const suppOrders of listOrder) {
-      // Tạo đơn hàng (OrderHistory)
-      await sendEmail(
-        "nguyenkhoe2k4@gmail.com",
-        "nhập hàng",
-        template(suppOrders)
+      allPromises.push(
+        sendEmail("nguyenkhoe2k4@gmail.com", "nhập hàng", template(suppOrders))
       );
 
       const ord = new OrderHistory({
@@ -63,84 +67,67 @@ const saveOrderHistory = async (req, res) => {
         generalStatus: suppOrders.some((item) => item.status == "pending")
           ? "pending"
           : "deliveried",
-        amount: suppOrders.reduce(
-          (acc, curr) => acc + Number(curr.price) * Number(curr.quantity),
-          0
-        ).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'),
-        ownerId: new mongoose.Types.ObjectId(req.body.user.ownerId),
-        tax: req.body.tax
+        amount: suppOrders
+          .reduce((acc, curr) => acc + Number(curr.price) * Number(curr.quantity), 0)
+          .toString(),
+        ownerId,
+        tax,
       });
 
       const savedOrder = await ord.save({ session });
 
-      // Tạo các chi tiết đơn hàng (OrderDetailHistory)
-      const ordDetails = suppOrders.map(
-        (item) =>
-          new OrderDetailHistory({
-            orderId: savedOrder._id,
-            productId: new mongoose.Types.ObjectId(item.productId),
-            price: item.price,
-            quantity: item.quantity,
-            status: item.status,
-            ownerId: new mongoose.Types.ObjectId(req.body.user.ownerId),
-          })
-      );
-      // Lưu các chi tiết đơn hàng
-      const savedOrderDetails = await OrderDetailHistory.insertMany(
-        ordDetails,
-        { session }
-      );
+      const ordDetails = suppOrders.map((item) => ({
+        orderId: savedOrder._id,
+        productId: new mongoose.Types.ObjectId(item.productId),
+        price: item.price,
+        quantity: item.quantity,
+        status: item.status,
+        ownerId,
+      }));
 
-      // Tạo các bản ghi log cho đơn hàng
-      const loggOrder = savedOrderDetails.map((savedOrderDetail) => {
-        return new LoggingOrder({
-          orderId: savedOrder._id,
-          orderDetailId: savedOrderDetail._id, // Sử dụng _id của từng order detail đã lưu
-          status: savedOrderDetail.status ==="deliveried"?"deliveried":"create", // Lấy status tương ứng
-          userId: req.body.user.id,
-          userName: req.body.user.name,
-          details: "create a new item",
-          ownerId: new mongoose.Types.ObjectId(req.body.user.ownerId),
-          tax:req.body.tax,
-        });
-      });
+      const savedOrderDetails = await OrderDetailHistory.insertMany(ordDetails, { session });
 
-      // Lưu các bản ghi loggingOrder
-      await LoggingOrder.insertMany(loggOrder, { session });
+      const loggOrder = savedOrderDetails.map((savedOrderDetail) => ({
+        orderId: savedOrder._id,
+        orderDetailId: savedOrderDetail._id,
+        status: savedOrderDetail.status === "deliveried" ? "deliveried" : "create",
+        userId,
+        userName,
+        details: "create a new item",
+        ownerId,
+        tax,
+      }));
+
+      allPromises.push(LoggingOrder.insertMany(loggOrder, { session }));
+
+      productUpdates.push(
+        ...suppOrders
+          .filter((item) => item.status === "deliveried")
+          .map((item) => ({
+            updateOne: {
+              filter: { _id: item.productId },
+              update: { $inc: { stock_in_Warehouse: item.quantity } },
+            },
+          }))
+      );
     }
 
-    const productDeliveried = listOrder
-      .flat()
-      .map((item) => {
-        if (item.status == "deliveried")
-          return { id: item.productId, quantity: item.quantity };
-      })
-      .filter((item) => item !== undefined);
-
-    for (const item of productDeliveried) {
-      const product = await Products.findOne({ _id: item.id });
-      if (product) {
-        await Products.updateOne(
-          { _id: item.id }, // Điều kiện tìm sản phẩm
-          { $inc: { stock_in_Warehouse: item.quantity } } // Tăng số lượng tồn kho
-        );
-      }
+    if (productUpdates.length > 0) {
+      allPromises.push(Products.bulkWrite(productUpdates));
     }
 
-    // Commit transaction
+    await Promise.all(allPromises);
+
     await session.commitTransaction();
     session.endSession();
+
     res.status(200).send({ message: "Order history saved successfully!" });
   } catch (error) {
-    // Nếu có lỗi, rollback transaction
     await session.abortTransaction();
     session.endSession();
-    console.error("Error during the transaction:", error);
 
-    // Gửi phản hồi lỗi
-    res
-      .status(500)
-      .send({ message: "An error occurred during the transaction", error });
+    console.error("Error during the transaction:", error);
+    res.status(500).send({ message: "An error occurred during the transaction", error });
   }
 };
 

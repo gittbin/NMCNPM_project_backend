@@ -1,4 +1,4 @@
-const Event = require('../modules/event');
+const Events = require('../modules/event');
 
 // API POST - Tạo sự kiện mới
 const createEvent = async (req, res) => {
@@ -13,7 +13,7 @@ const createEvent = async (req, res) => {
 
   try {
     // Tạo sự kiện mới
-    const newEvent = new Event({
+    const newEvent = new Events({
       task,
       employee,
       start_time: new Date(start_time), // Chuyển đổi thời gian sang đối tượng Date
@@ -33,7 +33,7 @@ const createEvent = async (req, res) => {
 const getEvents = async (req, res) => {
   try {
     const userId = req.query.userId;
-    const events = await Event.find({id_owner:userId});
+    const events = await Events.find({id_owner:userId});
 
     // Định dạng lại dữ liệu nếu cần thiết trước khi gửi
     const formattedEvents = events.map(event => ({
@@ -56,8 +56,16 @@ const getEvents = async (req, res) => {
 // API DELETE - Xóa tất cả sự kiện
 const deleteEvents = async (req, res) => {
   try {
-    await Event.deleteMany(); // Xóa tất cả các sự kiện
-    res.json({ message: "All events deleted successfully" });
+    const { id } = req.params; 
+    const { id_owner } = req.query; 
+    const deletedEvent = await Events.findOneAndDelete({ _id: id, id_owner });
+
+    // Nếu không tìm thấy sự kiện
+    if (!deletedEvent) {
+      return res.status(404).json({ message: "Sự kiện không tồn tại hoặc không hợp lệ" });
+    }
+
+    res.status(200).json({ message: "Xóa sự kiện thành công", deletedEvent });
   } catch (error) {
     console.error("Error deleting events:", error);
     res.status(500).json({ error: "Error deleting events" });
@@ -77,7 +85,7 @@ const updateEvent = async (req, res) => {
     }
 
     // Tìm và cập nhật sự kiện theo ID
-    const updatedEvent = await Event.findByIdAndUpdate(
+    const updatedEvent = await Events.findByIdAndUpdate(
       id,
       { task, employee, start_time, end_time, id_owner },
       { new: true } // Trả về bản ghi sau khi cập nhật
