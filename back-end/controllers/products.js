@@ -159,7 +159,7 @@ const create=async (req, res) => {
     });
     const Check=await Products.find({owner:user.id_owner,sku:newPr.sku})
     if(Check.length>0) {
-      return res.status(500).json({ message: 'Server error2' });} 
+      return res.status(500).json({ message: 'sku đã bị trùng' });} 
     try {
         const newProduct = new Products({
             ...newPr,

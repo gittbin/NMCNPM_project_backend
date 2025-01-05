@@ -33,7 +33,7 @@ const listOrderDetail = async (req, res) => {
           updatedAt: 1,
           name: "$product.name",
           image: "$product.image",
-          price: "$product.price",
+          price: "$product.purchasePrice",
           description: "$product.description",
         },
       },

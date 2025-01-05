@@ -52,31 +52,35 @@ const saveOrderHistory = async (req, res) => {
     const tax = req.body.tax;
     const userId = req.body.user.id;
     const userName = req.body.user.name;
-
-    const allPromises = [];
-
+    const userEmail = req.body.user.email;
+    const allOrderPromises = [];
+    const allOrderDetailHistories = [];
+    const allLoggingOrders = [];
     const productUpdates = [];
+    const emailPromises = [];
 
     for (const suppOrders of listOrder) {
-      allPromises.push(
-        sendEmail("nguyenkhoe2k4@gmail.com", "nhập hàng", template(suppOrders))
+      emailPromises.push(
+        sendEmail(userEmail, "nhập hàng", template(suppOrders))
       );
 
-      const ord = new OrderHistory({
+      const generalStatus = suppOrders.some((item) => item.status === "pending")
+        ? "pending"
+        : "deliveried";
+      const amount = suppOrders
+        .reduce((acc, curr) => acc + Math.floor(Number(curr.price) * Number(curr.quantity)*(tax/100+1)), 0)
+        .toString();
+      const order = new OrderHistory({
         supplierId: suppOrders[0].supplierId,
-        generalStatus: suppOrders.some((item) => item.status == "pending")
-          ? "pending"
-          : "deliveried",
-        amount: suppOrders
-          .reduce((acc, curr) => acc + Number(curr.price) * Number(curr.quantity), 0)
-          .toString(),
+        generalStatus,
+        amount,
         ownerId,
         tax,
       });
 
-      const savedOrder = await ord.save({ session });
+      const savedOrder = await order.save({ session });
 
-      const ordDetails = suppOrders.map((item) => ({
+      const orderDetails = suppOrders.map((item) => ({
         orderId: savedOrder._id,
         productId: new mongoose.Types.ObjectId(item.productId),
         price: item.price,
@@ -84,21 +88,19 @@ const saveOrderHistory = async (req, res) => {
         status: item.status,
         ownerId,
       }));
+      allOrderDetailHistories.push(...orderDetails);
 
-      const savedOrderDetails = await OrderDetailHistory.insertMany(ordDetails, { session });
-
-      const loggOrder = savedOrderDetails.map((savedOrderDetail) => ({
+      const loggingOrders = orderDetails.map((detail) => ({
         orderId: savedOrder._id,
-        orderDetailId: savedOrderDetail._id,
-        status: savedOrderDetail.status === "deliveried" ? "deliveried" : "create",
+        //orderDetailId: detail._id,
+        status: detail.status === "deliveried" ? "deliveried" : "create",
         userId,
         userName,
         details: "create a new item",
         ownerId,
         tax,
       }));
-
-      allPromises.push(LoggingOrder.insertMany(loggOrder, { session }));
+      allLoggingOrders.push(...loggingOrders);
 
       productUpdates.push(
         ...suppOrders
@@ -112,17 +114,31 @@ const saveOrderHistory = async (req, res) => {
       );
     }
 
-    if (productUpdates.length > 0) {
-      allPromises.push(Products.bulkWrite(productUpdates));
+    if (allOrderDetailHistories.length > 0) {
+      allOrderPromises.push(
+        OrderDetailHistory.insertMany(allOrderDetailHistories, { session })
+      );
     }
 
-    await Promise.all(allPromises);
+    if (allLoggingOrders.length > 0) {
+      allOrderPromises.push(
+        LoggingOrder.insertMany(allLoggingOrders, { session })
+      );
+    }
 
+    if (productUpdates.length > 0) {
+      allOrderPromises.push(Products.bulkWrite(productUpdates));
+    }
+
+    await Promise.all([...allOrderPromises, ...emailPromises]);
+
+    // Commit transaction
     await session.commitTransaction();
     session.endSession();
 
     res.status(200).send({ message: "Order history saved successfully!" });
   } catch (error) {
+    // Rollback transaction
     await session.abortTransaction();
     session.endSession();
 
@@ -131,10 +147,10 @@ const saveOrderHistory = async (req, res) => {
   }
 };
 
+
 const getOrder = async (req, res) => {
   try {
     const { search, ownerId } = req.query;
-    console.log("khoe", ownerId);
     let matchConditions = {};
     if (search) {
       if (mongoose.Types.ObjectId.isValid(search)) {
@@ -198,8 +214,6 @@ const getOrder = async (req, res) => {
 };
 const updateOrderHistory = async (req, res) => {
   const newOrder = req.body;
-  console.log(newOrder);
-  console.log("em");
   try {
     const orderH = await OrderHistory.findOne({
       _id: new mongoose.Types.ObjectId(newOrder.id),
@@ -213,7 +227,6 @@ const updateOrderHistory = async (req, res) => {
         orderId: new mongoose.Types.ObjectId(newOrder.id),
         status: "pending",
       });
-
       if (newOrder.status === "deliveried") {
         const promises = listOrderChange.map(async (orderChange) => {
           try {

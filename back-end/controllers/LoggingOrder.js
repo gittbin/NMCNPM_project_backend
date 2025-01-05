@@ -23,7 +23,7 @@ const getLogging = async(req,res)=>{
               }
             }
             query.ownerId = new mongoose.Types.ObjectId(ownerId);
-            console.log(query)   
+            console.log("query :", query)   
             const skip = (pageNum - 1) * limitNum;
         
             const logs = await LoggingOrder.aggregate([
@@ -36,11 +36,12 @@ const getLogging = async(req,res)=>{
               { 
                 $limit: limitNum 
               },
+
               {
                 $lookup: {
                   from: 'Order_Detail_History',  // Tên collection trong MongoDB
-                  localField: 'orderDetailId',  // Trường trong LoggingOrder
-                  foreignField: '_id',          // Trường trong OrderDetailHistory
+                  localField: 'orderId',  // Trường trong LoggingOrder
+                  foreignField: 'orderId',          // Trường trong OrderDetailHistory
                   as: 'orderDetail'            // Alias cho mảng kết quả trả về
                 }
               },
@@ -69,7 +70,7 @@ const getLogging = async(req,res)=>{
               {
                 $project: {
                   orderId: 1,                   // Giữ nguyên các trường cần thiết
-                  orderDetailId: 1,
+                  orderDetailId: '$orderDetail._id',
                   status: 1,
                   userName: 1,
                   createdAt: 1,
@@ -83,9 +84,8 @@ const getLogging = async(req,res)=>{
               }
             ]);
             const totalCount = await LoggingOrder.countDocuments(query);
-            // Trả về kết quả tìm kiếm cùng thông tin phân trang
             return res.status(200).json({
-              logs,  // Kết quả tìm kiếm
+              logs,  
               totalCount,  // Tổng số bản ghi (dùng để tính số trang)
               totalPages: Math.ceil(totalCount / limitNum),  // Tổng số trang
               currentPage: pageNum,  // Trang hiện tại
