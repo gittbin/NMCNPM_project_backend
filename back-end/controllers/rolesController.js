@@ -2,7 +2,9 @@ const Roles = require('../modules/roles');
 const Users = require('../modules/user');
 
 const createRole = async (req, res) => {
-    const { role, description, permissions, id_owner } = req.body; 
+    console.log(req.body);
+    const {newRoleData, user} = req.body;
+    const { role, description, permissions, id_owner } = newRoleData; 
     try {
         const newRole = new Roles({
             role,
@@ -36,7 +38,7 @@ const showRole = async (req, res) => {
 };
 
 const deleteRole = async (req, res) => {
-    const { role_id } = req.body; 
+    const { user, role_id } = req.body; 
     try {
         const roleToDelete = await Roles.findById(role_id);
         if (!roleToDelete) {

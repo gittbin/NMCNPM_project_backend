@@ -157,6 +157,9 @@ const create=async (req, res) => {
     console.log({
         ...newPr,
     });
+    const Check=await Products.find({owner:user.id_owner,sku:newPr.sku})
+    if(Check.length>0) {
+      return res.status(500).json({ message: 'Server error2' });} 
     try {
         const newProduct = new Products({
             ...newPr,

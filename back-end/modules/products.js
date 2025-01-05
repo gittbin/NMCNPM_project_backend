@@ -10,7 +10,7 @@ const productSchema = new mongoose.Schema({
     category: { type: String, required: true },
     brand: { type: String },
     description: { type: String },
-    sku: { type: String, unique: true, required: true },
+    sku: { type: String, required: true },
     price: { type: String, required: true },
     stock_in_shelf: { type: Number, default: 0 },
     reorderLevel: { type: Number, default: 10 },
