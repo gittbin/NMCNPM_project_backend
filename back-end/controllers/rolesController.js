@@ -47,7 +47,7 @@ const deleteRole = async (req, res) => {
         await Roles.findByIdAndDelete(role_id); 
         await Users.updateMany(
             { role: roleToDelete.role }, 
-            { role: 'Chưa có vai trò' } 
+            { role: '' } 
         );
         res.status(200).json({ message: 'Role deleted successfully' });
     } catch (error) {
