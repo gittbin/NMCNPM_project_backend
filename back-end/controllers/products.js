@@ -241,9 +241,15 @@ const edit_supplier=async(req,res)=>{
     const { user, supplier_edit } = req.body;
     try {
         let supplier = await Suppliers.find({ _id: supplier_edit._id });
-        if(supplier.length==0){        res.json({ message: "Không tìm thấy customer" });}
+        if(supplier.length==0){res.json({ message: "Không tìm thấy supplier" });}
         supplier = supplier[0];
-        
+        let check = await Suppliers.findOne({ 
+          _id: { $ne: supplier._id }, 
+          phone: supplier_edit.phone 
+        });
+        if (check) {
+          return res.json({ message: "Số điện thoại này đã được đăng ký" });
+        }
         const oldProduct = JSON.parse(JSON.stringify(supplier));
 
         // Cập nhật thông tin sản phẩm

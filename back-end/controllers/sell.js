@@ -169,7 +169,7 @@ const get_history = async (req, res) => {
 const get_history_customer=async (req,res) => {
   const { user } = req.body;
   try {
-      const activities = await customerCHistory.find({ owner: user._id }) // Lấy lịch sử hoạt động của người chủ
+      const activities = await customerCHistory.find({ owner: user.id_owner }) // Lấy lịch sử hoạt động của người chủ
           .populate('employee', 'name email') // Lấy tên nhân viên
           .populate('customer')
           .sort({ timestamp: -1 }) // Sắp xếp theo thời gian
@@ -187,6 +187,14 @@ const edit_customer=async (req,res)=>{
       let customer = await Customer.find({ _id: customer_edit._id });
       if(customer.length==0){        res.json({ message: "Không tìm thấy customer" });}
       customer = customer[0];
+      let check = await Customer.findOne({ 
+        _id: { $ne: customer._id }, 
+        phone: customer_edit.phone 
+      });
+      if (check) {
+        return res.json({ message: "Số điện thoại này đã được đăng ký" });
+      }
+      
       
       const oldProduct = JSON.parse(JSON.stringify(customer));
 
@@ -258,7 +266,7 @@ const delete_customer=async(req,res)=>{
       const history = new customerCHistory({
           owner: user.id_owner, // ID của người chủ
           employee: user._id, // ID của nhân viên thực hiện hành động
-          customer: customer.name,
+          customer: customer.phone,
           action: 'delete',
           details: detail
       });
