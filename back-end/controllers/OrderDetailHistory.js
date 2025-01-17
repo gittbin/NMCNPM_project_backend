@@ -112,7 +112,7 @@ const updateDetail = async (req, res) => {
         if (oldStatus === "pending" && info.status === "deliveried") {
           const product = await Products.findOne({ _id: info.productId });
           if (product) {
-            product.stock_in_Warehouse += info.quantity;
+            product.stock_in_Warehouse += Number(info.quantity);
             await product.save();
           } else {
             console.error(`Product with ID ${info.productId} not found`);

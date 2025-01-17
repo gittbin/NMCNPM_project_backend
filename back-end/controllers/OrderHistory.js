@@ -108,7 +108,7 @@ const saveOrderHistory = async (req, res) => {
           .map((item) => ({
             updateOne: {
               filter: { _id: item.productId },
-              update: { $inc: { stock_in_Warehouse: item.quantity } },
+              update: { $inc: { stock_in_Warehouse: Number(item.quantity) } },
             },
           }))
       );
@@ -232,7 +232,7 @@ const updateOrderHistory = async (req, res) => {
           try {
             await Products.updateOne(
               { _id: orderChange.productId },
-              { $inc: { stock_in_Warehouse: orderChange.quantity } }
+              { $inc: { stock_in_Warehouse: Number(orderChange.quantity) } }
             );
 
             orderChange.status = "deliveried";
