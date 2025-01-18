@@ -6,6 +6,10 @@ const createRole = async (req, res) => {
     const {newRoleData, user} = req.body;
     const { role, description, permissions, id_owner } = newRoleData; 
     try {
+        const existingRole = await Roles.findOne({ role, id_owner });
+        if (existingRole) {
+            return res.status(400).json({ message: 'Vai trò đã tồn tại' });
+        }
         const newRole = new Roles({
             role,
             description,
