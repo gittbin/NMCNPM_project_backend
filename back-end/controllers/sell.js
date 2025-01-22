@@ -188,7 +188,8 @@ const edit_customer=async (req,res)=>{
       if(customer.length==0){        res.json({ message: "Không tìm thấy customer" });}
       customer = customer[0];
       let check = await Customer.findOne({ 
-        _id: { $ne: customer._id }, 
+        _id: { $ne: customer._id },
+        owner:user.id_owner, 
         phone: customer_edit.phone 
       });
       if (check) {
